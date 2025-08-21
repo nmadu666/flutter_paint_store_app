@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "31364040406",
+    "project_id": "flutter-paint-store-app",
+    "storage_bucket": "flutter-paint-store-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:31364040406:android:bd92e35a84c008c3b36b77",
+        "android_client_info": {
+          "package_name": "com.example.flutter_paint_store_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRoZILZTfP1-77EWh-nHd6PmNbs3c9Qq4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
