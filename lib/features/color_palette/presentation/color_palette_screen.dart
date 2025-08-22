@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_paint_store_app/features/color_palette/domain/color_tone_helper.dart';
+import 'package:intl/intl.dart';
+import 'package:collection/collection.dart';
+
 import 'package:flutter_paint_store_app/features/color_palette/application/color_palette_state.dart';
+import 'package:flutter_paint_store_app/features/color_palette/domain/color_tone_helper.dart';
 import 'package:flutter_paint_store_app/models/paint_color.dart';
+import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
+import 'package:flutter_paint_store_app/models/parent_product.dart';
+import 'package:flutter_paint_store_app/models/product.dart';
 
 class ColorPaletteScreen extends ConsumerWidget {
   const ColorPaletteScreen({super.key});
@@ -87,10 +93,13 @@ class ColorPaletteScreen extends ConsumerWidget {
           if (color.ncs != null) 'NCS: ${color.ncs}',
         ];
         return Card(
-          child: ListTile(
-            leading: CircleAvatar(backgroundColor: color.color, radius: 20),
-            title: Text('${color.name} (${color.brand})'),
-            subtitle: Text(subtitleParts.join(' - ')),
+          child: InkWell(
+            onTap: () => _showProductSelection(context, color),
+            child: ListTile(
+              leading: CircleAvatar(backgroundColor: color.color, radius: 20),
+              title: Text('${color.name} (${color.brand})'),
+              subtitle: Text(subtitleParts.join(' - ')),
+            ),
           ),
         );
       },
@@ -108,8 +117,29 @@ class ColorPaletteScreen extends ConsumerWidget {
       ),
       itemCount: colors.length,
       itemBuilder: (context, index) {
-        return _ColorCard(color: colors[index]);
+        final color = colors[index];
+        return InkWell(
+          onTap: () => _showProductSelection(context, color),
+          borderRadius: BorderRadius.circular(12),
+          child: _ColorCard(color: color),
+        );
       },
+    );
+  }
+
+  void _showProductSelection(BuildContext context, PaintColor color) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.5,
+        maxChildSize: 0.9,
+        builder: (_, scrollController) => _ProductSelectionSheet(
+          color: color,
+          scrollController: scrollController,
+        ),
+      ),
     );
   }
 }
@@ -164,6 +194,241 @@ class _AdvancedFiltersSheet extends ConsumerWidget {
   }
 }
 
+class _ProductSelectionSheet extends ConsumerStatefulWidget {
+  const _ProductSelectionSheet({
+    required this.color,
+    required this.scrollController,
+  });
+  final PaintColor color;
+  final ScrollController scrollController;
+
+  @override
+  ConsumerState<_ProductSelectionSheet> createState() =>
+      _ProductSelectionSheetState();
+}
+
+class _ProductSelectionSheetState
+    extends ConsumerState<_ProductSelectionSheet> {
+  @override
+  Widget build(BuildContext context) {
+    final suitableParentsAsync =
+        ref.watch(suitableParentProductsProvider(widget.color));
+    final allColorPrices = ref.watch(allColorPricesProvider);
+
+    return Column(
+      children: [
+        // M3 Grabber handle
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Center(
+            child: Container(
+              width: 32,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Text(
+            'Chọn sản phẩm cho màu ${widget.color.name}',
+            style: Theme.of(context).textTheme.titleLarge,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: suitableParentsAsync.when(
+            data: (parentProducts) {
+              if (parentProducts.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'Không có dòng sản phẩm nào phù hợp với màu này.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+              return ListView.builder(
+                controller: widget.scrollController,
+                itemCount: parentProducts.length,
+                itemBuilder: (context, index) {
+                  final parentProduct = parentProducts[index];
+
+                  // Filter children to only show those suitable for this color.
+                  final suitableChildren = parentProduct.children.where((child) {
+                    if (child.base == null ||
+                        parentProduct.tintingFormulaType == null) return false;
+                    final isBasePhysicallySuitable =
+                        isBaseSuitableForColor(child.base!, widget.color);
+                    final hasPriceInfo = allColorPrices.any(
+                      (price) =>
+                          price.code == widget.color.code &&
+                          price.base == child.base &&
+                          price.tintingFormulaType ==
+                              parentProduct.tintingFormulaType,
+                    );
+                    return isBasePhysicallySuitable && hasPriceInfo;
+                  }).toList();
+
+                  if (suitableChildren.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return ExpansionTile(
+                    title: Text(parentProduct.name),
+                    subtitle: Text(
+                        '${parentProduct.brand} - ${parentProduct.category}'),
+                    children: suitableChildren.map((childProduct) {
+                      return _ProductSelectionListItem(
+                        color: widget.color,
+                        product: childProduct,
+                      );
+                    }).toList(),
+                  );
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Đã xảy ra lỗi: $err')),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              icon: const Icon(Icons.add_shopping_cart),
+              label: const Text('Thêm vào báo giá'),
+              onPressed: () {
+                final parentProducts = suitableParentsAsync.valueOrNull ?? [];
+                int itemsAdded = 0;
+                final quoteNotifier = ref.read(quoteProvider.notifier);
+
+                for (final parent in parentProducts) {
+                  for (final child in parent.children) {
+                    final quantity = ref.read(quantityProvider(child.id));
+                    if (quantity > 0) {
+                      quoteNotifier.addItem(
+                        product: child,
+                        color: widget.color,
+                        quantity: quantity,
+                      );
+                      itemsAdded++;
+                      // Reset quantity after adding
+                      ref.read(quantityProvider(child.id).notifier).state = 0;
+                    }
+                  }
+                }
+
+                Navigator.of(context).pop(); // Close the sheet
+                if (itemsAdded > 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã thêm $itemsAdded sản phẩm vào báo giá.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Chưa có sản phẩm nào được chọn số lượng.'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProductSelectionListItem extends ConsumerWidget {
+  const _ProductSelectionListItem({
+    required this.color,
+    required this.product,
+  });
+
+  final PaintColor color;
+  final Product product;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quantity = ref.watch(quantityProvider(product.id));
+    final quantityNotifier = ref.read(
+      quantityProvider(product.id).notifier,
+    );
+
+    // Calculate price using the provider
+    final finalPrice = ref.watch(
+      finalPriceProvider(
+        ColorProductPair(color: color, product: product),
+      ),
+    );
+
+    return ListTile(
+      title: Text(product.name),
+      subtitle: Text(
+        'Dung tích: ${product.unitValue}L - Base ${product.base}',
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              finalPrice != null
+                  ? NumberFormat.currency(
+                      locale: 'vi_VN',
+                      symbol: '₫',
+                      decimalDigits: 0,
+                    ).format(finalPrice)
+                  : 'N/A',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              textAlign: TextAlign.end,
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Quantity Counter
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.remove_circle_outline),
+                onPressed: () {
+                  if (quantity > 0) {
+                    quantityNotifier.state--;
+                  }
+                },
+              ),
+              Text(
+                '$quantity',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: () {
+                  quantityNotifier.state++;
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 Widget _buildFilterSection({
   required BuildContext context,
   required WidgetRef ref,
@@ -202,45 +467,61 @@ Widget _buildFilterSection({
   );
 }
 
-class _ColorToneFilters extends ConsumerWidget {
+class _ColorToneFilters extends ConsumerStatefulWidget {
   const _ColorToneFilters();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ColorToneFilters> createState() => _ColorToneFiltersState();
+}
+
+class _ColorToneFiltersState extends ConsumerState<_ColorToneFilters> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colorTones = ref.watch(colorTonesProvider);
     final selectedTone = ref.watch(selectedColorToneProvider);
 
-    // Using SingleChildScrollView with a Row is a robust way to create a
-    // horizontal list of chips that is guaranteed to be scrollable if the content overflows.
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text('Tone màu:', style: Theme.of(context).textTheme.labelLarge),
-          const SizedBox(width: 8),
-          ChoiceChip(
-            label: const Text('Tất cả'),
-            selected: selectedTone == null,
-            onSelected: (_) {
-              ref.read(selectedColorToneProvider.notifier).state = null;
-            },
-          ),
-          // Generate the rest of the chips
-          ...colorTones.map(
-            (tone) => Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: ChoiceChip(
-                label: Text(getToneName(tone)),
-                selected: selectedTone == tone,
-                onSelected: (_) {
-                  ref.read(selectedColorToneProvider.notifier).state = tone;
-                },
+    // Bọc SingleChildScrollView bằng Scrollbar để hiển thị thanh cuộn trên desktop/web
+    return Scrollbar(
+      controller: _scrollController,
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text('Tone màu:', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(width: 8),
+            ChoiceChip(
+              label: const Text('Tất cả'),
+              selected: selectedTone == null,
+              onSelected: (_) {
+                ref.read(selectedColorToneProvider.notifier).state = null;
+              },
+            ),
+            // Generate the rest of the chips
+            ...colorTones.map(
+              (tone) => Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: ChoiceChip(
+                  label: Text(getToneName(tone)),
+                  selected: selectedTone == tone,
+                  onSelected: (_) {
+                    ref.read(selectedColorToneProvider.notifier).state = tone;
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

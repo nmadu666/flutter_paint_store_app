@@ -1,30 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter_paint_store_app/models/customer.dart';
 import 'package:flutter_paint_store_app/models/quote.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
+import 'package:flutter_paint_store_app/models/product_pricing.dart';
 import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
 import 'package:flutter_paint_store_app/features/sales/infrastructure/quote_pdf_service.dart';
+
+void _showAddedToCartSnackbar(BuildContext context, Product product) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('${product.name} đã được thêm vào báo giá.'),
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
 
 class SalesScreen extends ConsumerWidget {
   const SalesScreen({super.key});
 
-  // Hàm thêm sản phẩm vào giỏ hàng
-  void _addToCart(Product product, WidgetRef ref, BuildContext context) {
-    ref.read(cartProvider.notifier).addToCart(product);
-
-    // Hiển thị thông báo
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} đã được thêm vào giỏ hàng.'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
   Future<void> _handlePrintQuote(BuildContext context, WidgetRef ref) async {
-    final cart = ref.read(cartProvider);
-    if (cart.isEmpty) {
+    final quote = ref.read(quoteProvider);
+    final quoteItems = quote.items;
+    if (quoteItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Giỏ hàng đang trống!'),
@@ -39,10 +38,10 @@ class SalesScreen extends ConsumerWidget {
     ref.read(isPrintingProvider.notifier).state = true;
     try {
       final customer = ref.read(selectedCustomerProvider);
-      final total = ref.read(cartTotalProvider);
+      final total = ref.read(quoteTotalProvider);
       await QuotePdfService().generateAndPrintQuote(
-        cartItems: cart,
-        customer: customer,
+        cartItems: quoteItems,
+        customer: customer, // The service will use the customer from the quote
         totalAmount: total,
       );
     } finally {
@@ -68,7 +67,7 @@ class SalesScreen extends ConsumerWidget {
   // Giao diện cho Mobile
   Widget _buildMobileLayout(BuildContext context, WidgetRef ref) {
     final isShowingCart = ref.watch(isShowingCartMobileProvider);
-    final cartItems = ref.watch(cartProvider);
+    final quoteItems = ref.watch(quoteProvider).items;
 
     return Scaffold(
       appBar: AppBar(
@@ -110,12 +109,12 @@ class SalesScreen extends ConsumerWidget {
       ),
       body: isShowingCart
           ? _buildMobileCartView(context, ref)
-          : _buildMobileProductList(context, ref),
-      floatingActionButton: !isShowingCart && cartItems.isNotEmpty
+          : _buildProductList(context, ref),
+      floatingActionButton: !isShowingCart && quoteItems.isNotEmpty
           ? FloatingActionButton.extended(
               onPressed: () =>
                   ref.read(isShowingCartMobileProvider.notifier).state = true,
-              label: Text('Xem giỏ hàng (${cartItems.length})'),
+              label: Text('Xem giỏ hàng (${quoteItems.length})'),
               icon: const Icon(Icons.shopping_cart_outlined),
             )
           : null,
@@ -123,9 +122,9 @@ class SalesScreen extends ConsumerWidget {
   }
 
   // Widget danh sách sản phẩm cho mobile
-  Widget _buildMobileProductList(BuildContext context, WidgetRef ref) {
-    final filteredProducts = ref.watch(filteredProductsProvider);
-    final productsAsync = ref.watch(productsProvider);
+  Widget _buildProductList(BuildContext context, WidgetRef ref) {
+    final filteredProducts = ref.watch(filteredSalesProductsProvider);
+    final productsAsync = ref.watch(salesProductsProvider);
     final selectedPriceList = ref.watch(selectedPriceListProvider);
 
     return productsAsync.when(
@@ -142,15 +141,11 @@ class SalesScreen extends ConsumerWidget {
                 final product = filteredProducts[index];
 
                 // Find the price for the current product based on the selected price list
-                final productPrice = product.pricing.firstWhere(
+                final specificPrice = product.prices.firstWhereOrNull(
                   (p) => p.priceGroup == selectedPriceList,
-                  // Fallback to the first price if not found or if pricing is empty
-                  orElse: () => product.pricing.isNotEmpty
-                      ? product.pricing.first
-                      : const ProductPricing(priceGroup: 'N/A', cost: 0),
                 );
-
-                final priceString = '${productPrice.cost.toStringAsFixed(0)}đ';
+                final displayPrice = specificPrice?.price ?? product.basePrice;
+                final priceString = '${displayPrice.toStringAsFixed(0)}đ';
 
                 return ListTile(
                   title: Text(product.name),
@@ -167,24 +162,26 @@ class SalesScreen extends ConsumerWidget {
 
   // Widget giỏ hàng cho mobile
   Widget _buildMobileCartView(BuildContext context, WidgetRef ref) {
-    final cartItems = ref.watch(cartProvider);
-    final cartTotal = ref.watch(cartTotalProvider);
+    final quoteItems = ref.watch(quoteProvider).items;
+    final cartTotal = ref.watch(quoteTotalProvider);
     final isPrinting = ref.watch(isPrintingProvider);
     final totalString = '${cartTotal.toStringAsFixed(0)}đ';
 
-    if (cartItems.isEmpty) {
+    if (quoteItems.isEmpty) {
       return const Center(child: Text('Giỏ hàng của bạn đang trống.'));
     }
     return Column(
       children: [
         Expanded(
           child: ListView.builder(
-            itemCount: cartItems.length,
+            itemCount: quoteItems.length,
             itemBuilder: (context, index) {
-              final item = cartItems[index];
+              final item = quoteItems[index];
               return ListTile(
-                title: Text(item.productName),
-                subtitle: Text('Số lượng: ${item.quantity}'),
+                title: Text(item.product.name),
+                subtitle: Text(
+                  'Màu: ${item.color?.name ?? "N/A"} - Số lượng: ${item.quantity}',
+                ),
                 trailing: Text('${item.totalPrice.toStringAsFixed(0)}đ'),
               );
             },
@@ -236,10 +233,10 @@ class SalesScreen extends ConsumerWidget {
 
   // Giao diện cho Desktop/Tablet
   Widget _buildDesktopLayout(BuildContext context, WidgetRef ref) {
-    final cartItems = ref.watch(cartProvider);
-    final allProductsAsync = ref.watch(productsProvider);
+    final quoteItems = ref.watch(quoteProvider).items;
+    final allProductsAsync = ref.watch(salesProductsProvider);
     final selectedPriceList = ref.watch(selectedPriceListProvider);
-    final cartTotal = ref.watch(cartTotalProvider);
+    final cartTotal = ref.watch(quoteTotalProvider);
     final isPrinting = ref.watch(isPrintingProvider);
     final totalString = '${cartTotal.toStringAsFixed(0)}đ';
 
@@ -268,7 +265,8 @@ class SalesScreen extends ConsumerWidget {
                 // Return an empty string to clear the field on selection from custom options view
                 displayStringForOption: (Product option) => '',
                 onSelected: (Product selection) {
-                  _addToCart(selection, ref, context);
+                  ref.read(quoteProvider.notifier).addItem(product: selection);
+                  _showAddedToCartSnackbar(context, selection);
                 },
                 optionsViewBuilder: (context, onSelected, options) {
                   return Align(
@@ -283,17 +281,14 @@ class SalesScreen extends ConsumerWidget {
                           itemCount: options.length,
                           itemBuilder: (BuildContext context, int index) {
                             final Product option = options.elementAt(index);
-                            final productPrice = option.pricing.firstWhere(
-                              (p) => p.priceGroup == selectedPriceList,
-                              orElse: () => option.pricing.isNotEmpty
-                                  ? option.pricing.first
-                                  : const ProductPricing(
-                                      priceGroup: 'N/A',
-                                      cost: 0,
-                                    ),
-                            );
+                            final specificPrice = option.prices
+                                .firstWhereOrNull(
+                                  (p) => p.priceGroup == selectedPriceList,
+                                );
+                            final displayPrice =
+                                specificPrice?.price ?? option.basePrice;
                             final priceString =
-                                '${productPrice.cost.toStringAsFixed(0)}đ';
+                                '${displayPrice.toStringAsFixed(0)}đ';
 
                             return ListTile(
                               title: Text(option.name),
@@ -347,34 +342,34 @@ class SalesScreen extends ConsumerWidget {
         children: [
           Expanded(
             flex: 2,
-            child: cartItems.isEmpty
+            child: quoteItems.isEmpty
                 ? const Center(
                     child: Text('Chưa có sản phẩm nào trong giỏ hàng.'),
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: cartItems.length,
+                    itemCount: quoteItems.length,
                     itemBuilder: (context, index) {
-                      final item = cartItems[index];
+                      final item = quoteItems[index];
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
-                          title: Text(item.productName),
+                          title: Text(item.product.name),
                           subtitle: Text(
-                            'Màu: ${item.colorName} - Base: ${item.base}',
+                            'Màu: ${item.color?.name ?? "N/A"} - Base: ${item.product.base ?? "N/A"}',
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${item.quantity} x ${item.unitPrice.toStringAsFixed(0)}đ',
+                                '${item.quantity} x ${item.unitPrice.toStringAsFixed(0)}đ = ${item.totalPrice.toStringAsFixed(0)}đ',
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete_outline),
                                 onPressed: () {
                                   ref
-                                      .read(cartProvider.notifier)
-                                      .removeFromCartByIndex(index);
+                                      .read(quoteProvider.notifier)
+                                      .removeItem(item.id);
                                 },
                               ),
                             ],
@@ -565,20 +560,19 @@ class _ProductCounter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cartItems = ref.watch(cartProvider);
-    final itemIndex = cartItems.indexWhere(
-      (item) => item.productId == product.id,
+    final quoteItems = ref.watch(quoteProvider).items;
+    final itemInCart = quoteItems.firstWhereOrNull(
+      (item) => item.product.id == product.id && item.color == null,
     );
-    final quantityInCart = itemIndex != -1
-        ? cartItems[itemIndex].quantity.toInt()
-        : 0;
+    final quantityInCart = itemInCart?.quantity ?? 0;
 
     if (quantityInCart == 0) {
       return IconButton(
         icon: const Icon(Icons.add_shopping_cart_outlined),
         tooltip: 'Thêm vào giỏ',
         onPressed: () {
-          ref.read(cartProvider.notifier).addToCart(product);
+          ref.read(quoteProvider.notifier).addItem(product: product);
+          _showAddedToCartSnackbar(context, product);
         },
       );
     }
@@ -589,9 +583,9 @@ class _ProductCounter extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.remove_circle_outline),
           tooltip: 'Bớt',
-          onPressed: () {
-            ref.read(cartProvider.notifier).decrementFromCart(product);
-          },
+          onPressed: () => ref
+              .read(quoteProvider.notifier)
+              .updateQuantity(itemInCart!.id, itemInCart.quantity - 1),
         ),
         Text(
           quantityInCart.toString(),
@@ -600,9 +594,9 @@ class _ProductCounter extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.add_circle_outline),
           tooltip: 'Thêm',
-          onPressed: () {
-            ref.read(cartProvider.notifier).addToCart(product);
-          },
+          onPressed: () => ref
+              .read(quoteProvider.notifier)
+              .updateQuantity(itemInCart!.id, itemInCart.quantity + 1),
         ),
       ],
     );

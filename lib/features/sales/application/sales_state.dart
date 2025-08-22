@@ -1,195 +1,208 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_paint_store_app/models/product.dart';
+import 'package:flutter_paint_store_app/features/color_palette/application/color_palette_state.dart';
 import 'package:flutter_paint_store_app/models/customer.dart';
+import 'package:collection/collection.dart'; // Import for firstWhereOrNull
+import 'package:flutter_paint_store_app/models/paint_color.dart';
+import 'package:flutter_paint_store_app/models/product.dart';
 import 'package:flutter_paint_store_app/models/quote.dart';
 
-// 1. Provider for the search query
-final salesSearchQueryProvider = StateProvider<String>((ref) => '');
+// --- UI State Providers ---
 
-// 2. Provider to fetch all products (currently mocked)
-final productsProvider = FutureProvider<List<Product>>((ref) async {
-  // Simulate network delay
-  await Future.delayed(const Duration(milliseconds: 500));
-  // In a real app, you would fetch this from Firestore or an API
-  return List.generate(
-    20,
-    (i) => Product(
-      id: '$i',
-      name: 'Sản phẩm sơn $i',
-      code: 'SP$i',
-      pricing: [
-        ProductPricing(priceGroup: 'Giá bán lẻ', cost: 150000 + i * 1000),
-        ProductPricing(priceGroup: 'Giá đại lý cấp 1', cost: 135000 + i * 1000),
-        ProductPricing(priceGroup: 'Giá dự án', cost: 120000 + i * 1000),
-      ],
-    ),
-  );
+final salesSearchQueryProvider = StateProvider<String>((ref) => '');
+final isShowingCartMobileProvider = StateProvider<bool>((ref) => false);
+final isPrintingProvider = StateProvider<bool>((ref) => false);
+
+// --- Data Providers ---
+
+/// Provides a flat list of all individual products (SKUs) available for sale.
+/// This is derived from the central `allParentProductsProvider`.
+final salesProductsProvider = FutureProvider<List<Product>>((ref) async {
+  final parentProducts = await ref.watch(allParentProductsProvider.future);
+  return parentProducts.expand((parent) => parent.children).toList();
 });
 
-// 3. Provider for the filtered list of products
-final filteredProductsProvider = Provider<List<Product>>((ref) {
+/// Provides a filtered list of products based on the search query.
+final filteredSalesProductsProvider = Provider<List<Product>>((ref) {
   final query = ref.watch(salesSearchQueryProvider);
-  final productsAsyncValue = ref.watch(productsProvider);
+  final productsAsyncValue = ref.watch(salesProductsProvider);
 
   return productsAsyncValue.when(
     data: (products) {
       if (query.isEmpty) {
         return products;
       }
+      final lowerCaseQuery = query.toLowerCase();
       return products
           .where(
             (product) =>
-                product.name.toLowerCase().contains(query.toLowerCase()) ||
-                product.code.toLowerCase().contains(query.toLowerCase()),
+                product.name.toLowerCase().contains(lowerCaseQuery) ||
+                product.code.toLowerCase().contains(lowerCaseQuery),
           )
           .toList();
     },
-    loading: () => [], // Return empty list while loading
-    error: (err, stack) => [], // Return empty list on error
+    loading: () => [],
+    error: (err, stack) => [],
   );
 });
 
-// 4. StateNotifier for the cart
-class CartNotifier extends StateNotifier<List<QuoteItem>> {
-  CartNotifier(this.ref) : super([]);
+/// Manages the state of the current quote, including its items.
+class QuoteNotifier extends StateNotifier<Quote> {
+  QuoteNotifier(this.ref)
+    : super(
+        Quote(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          items: [],
+          createdAt: DateTime.now(),
+        ),
+      );
+
   final Ref ref;
 
-  void addToCart(Product product) {
-    final selectedPriceList = ref.read(selectedPriceListProvider);
-    final productPrice = product.pricing.firstWhere(
-      (p) => p.priceGroup == selectedPriceList,
-      // Fallback to the first available price if not found
-      orElse: () => product.pricing.first,
-    );
-    final unitPrice = productPrice.cost;
-
-    final existingItemIndex = state.indexWhere(
-      (item) => item.productId == product.id,
+  /// Adds an item to the quote. If an item with the same product and color
+  /// already exists, it increments the quantity.
+  void addItem({
+    required Product product,
+    PaintColor? color,
+    int quantity = 1,
+  }) {
+    final existingItemIndex = state.items.indexWhere(
+      (item) => item.product.id == product.id && item.color?.id == color?.id,
     );
 
     if (existingItemIndex != -1) {
-      // Item exists, update quantity
-      final existingItem = state[existingItemIndex];
-      final updatedItem = existingItem.copyWith(
-        quantity: existingItem.quantity + 1,
-        unitPrice: unitPrice, // Update price in case price list changed
-        totalPrice: unitPrice * (existingItem.quantity + 1),
-      );
-      final newState = List<QuoteItem>.from(state);
-      newState[existingItemIndex] = updatedItem;
-      state = newState;
+      // Item exists, just update its quantity
+      final existingItem = state.items[existingItemIndex];
+      updateQuantity(existingItem.id, existingItem.quantity + quantity);
     } else {
-      // Item does not exist, add new
+      // Item does not exist, create a new one
+      final unitPrice = _calculateUnitPrice(product: product, color: color);
+      if (unitPrice == null) {
+        // Cannot determine price, do not add to cart.
+        // Optionally, show an error to the user.
+        return;
+      }
+
       final newItem = QuoteItem(
-        productId: product.id,
-        productName: product.name,
-        colorName: "Màu mặc định",
-        hexCode: "FFFFFF",
-        base: "P",
-        quantity: 1,
+        // Create a unique ID for the quote item
+        id: '${product.id}_${color?.id ?? 'none'}_${Random().nextInt(99999)}',
+        product: product,
+        color: color,
+        quantity: quantity,
         unitPrice: unitPrice,
-        totalPrice: unitPrice,
-        sku: "${product.code}_P_FFFFFF", // Giả lập SKU
       );
-      state = [...state, newItem];
+      state = state.copyWith(items: [...state.items, newItem]);
     }
   }
 
-  void decrementFromCart(Product product) {
-    final existingItemIndex = state.indexWhere(
-      (item) => item.productId == product.id,
-    );
+  void updateQuantity(String quoteItemId, int newQuantity) {
+    final items = List<QuoteItem>.from(state.items);
+    final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
 
-    if (existingItemIndex != -1) {
-      final existingItem = state[existingItemIndex];
-      if (existingItem.quantity > 1) {
-        final updatedItem = existingItem.copyWith(
-          quantity: existingItem.quantity - 1,
-          totalPrice: existingItem.unitPrice * (existingItem.quantity - 1),
-        );
-        final newState = List<QuoteItem>.from(state);
-        newState[existingItemIndex] = updatedItem;
-        state = newState;
+    if (itemIndex != -1) {
+      if (newQuantity > 0) {
+        items[itemIndex] = items[itemIndex].copyWith(quantity: newQuantity);
+        state = state.copyWith(items: items);
       } else {
-        // If quantity is 1, remove it from cart
-        _removeItemByProductId(product.id);
+        // Remove item if quantity is 0 or less
+        removeItem(quoteItemId);
       }
     }
   }
 
-  void _removeItemByProductId(String productId) {
-    state = state.where((item) => item.productId != productId).toList();
+  void removeItem(String quoteItemId) {
+    state = state.copyWith(
+      items: state.items.where((item) => item.id != quoteItemId).toList(),
+    );
   }
 
-  void updateCartPrices() {
-    final productsAsync = ref.read(productsProvider);
+  /// Recalculates all prices in the cart. Useful when the price list changes.
+  void updateAllPrices() {
     final newPriceList = ref.read(selectedPriceListProvider);
-
-    // Only update prices if the product list is available
-    productsAsync.whenData((products) {
-      // Create a map for efficient product lookup
-      final productMap = {for (var p in products) p.id: p};
-
-      final updatedCart = state.map((item) {
-        final product = productMap[item.productId];
-        if (product == null) {
-          return item; // Keep item as is if product not found
-        }
-
-        final productPrice = product.pricing.firstWhere(
-          (p) => p.priceGroup == newPriceList,
-          orElse: () => product.pricing.first, // Fallback
-        );
-        final newUnitPrice = productPrice.cost;
-
-        return item.copyWith(
-          unitPrice: newUnitPrice,
-          totalPrice: newUnitPrice * item.quantity,
-        );
-      }).toList();
-      state = updatedCart;
-    });
+    final updatedItems = state.items.map((item) {
+      final newPrice = _calculateUnitPrice(
+        product: item.product,
+        color: item.color,
+        priceList: newPriceList,
+      );
+      return item.copyWith(unitPrice: newPrice ?? item.unitPrice);
+    }).toList();
+    state = state.copyWith(items: updatedItems);
   }
 
-  void removeFromCartByIndex(int index) {
-    state = List.from(state)..removeAt(index);
+  /// Calculates the unit price for a given product and optional color.
+  double? _calculateUnitPrice({
+    required Product product,
+    PaintColor? color,
+    String? priceList,
+  }) {
+    final selectedPriceList = priceList ?? ref.read(selectedPriceListProvider);
+
+    // Find the base price from the selected price list.
+    // If a specific price group is found in the `prices` list, use it.
+    // Otherwise, fall back to the product's `basePrice`.
+    final specificPrice = product.prices.firstWhereOrNull(
+      (p) => p.priceGroup == selectedPriceList,
+    );
+
+    final basePrice = specificPrice?.price ?? product.basePrice;
+
+    // If it's not a tintable product, the price is just the base price.
+    if (color == null || product.tintingFormulaType == null) {
+      return basePrice;
+    }
+
+    // For tinted products, add the tinting cost.
+    final colorPrice = ref
+        .read(allColorPricesProvider)
+        .firstWhereOrNull(
+          (p) =>
+              p.code == color.code &&
+              p.base == product.base &&
+              p.tintingFormulaType == product.tintingFormulaType,
+        );
+
+    if (colorPrice == null) {
+      // Price not found for this specific combination of color/base/formula
+      print(
+        'Error: Price not found for color ${color.code}, base ${product.base}, formula ${product.tintingFormulaType}',
+      );
+      return null;
+    }
+    final tintingCost = colorPrice.pricePerMl * product.unitValue * 1000;
+    return basePrice + tintingCost;
   }
 
   void clear() {
-    state = [];
+    state = state.copyWith(items: [], customer: null);
   }
 }
 
-// 5. Provider for the CartNotifier
-final cartProvider = StateNotifierProvider<CartNotifier, List<QuoteItem>>((
-  ref,
-) {
-  final notifier = CartNotifier(ref);
+// --- Quote Providers ---
+
+final quoteProvider = StateNotifierProvider<QuoteNotifier, Quote>((ref) {
+  final notifier = QuoteNotifier(ref);
 
   // When the price list changes, trigger a price update for all items in the cart.
   ref.listen<String>(selectedPriceListProvider, (previous, next) {
-    notifier.updateCartPrices();
+    if (previous != next) {
+      notifier.updateAllPrices();
+    }
   });
 
   return notifier;
 });
 
-// 6. Provider for mobile UI state
-final isShowingCartMobileProvider = StateProvider<bool>((ref) => false);
-
-// 7. Provider to manage the printing state
-final isPrintingProvider = StateProvider<bool>((ref) => false);
-
-// 7. Provider to calculate the cart total
-final cartTotalProvider = Provider<double>((ref) {
-  final cartItems = ref.watch(cartProvider);
-  if (cartItems.isEmpty) {
-    return 0.0;
-  }
-  return cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+/// Calculates the total price of the current quote.
+final quoteTotalProvider = Provider<double>((ref) {
+  final quoteItems = ref.watch(quoteProvider).items;
+  if (quoteItems.isEmpty) return 0.0;
+  return quoteItems.fold(0.0, (sum, item) => sum + item.totalPrice);
 });
 
-// 7. Customer Providers
+// --- Customer and Price List Providers ---
+
 final customersProvider = Provider<List<Customer>>((ref) {
   // In a real app, fetch from Firestore
   return [
@@ -199,9 +212,10 @@ final customersProvider = Provider<List<Customer>>((ref) {
   ];
 });
 
-final selectedCustomerProvider = StateProvider<Customer?>((ref) => null);
+final selectedCustomerProvider = StateProvider<Customer?>((ref) {
+  return ref.watch(customersProvider).first;
+});
 
-// 8. Price List Providers
 final priceListsProvider = Provider<List<String>>((ref) {
   return ['Giá bán lẻ', 'Giá đại lý cấp 1', 'Giá dự án'];
 });

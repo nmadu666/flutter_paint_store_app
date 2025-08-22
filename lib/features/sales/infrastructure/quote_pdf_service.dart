@@ -105,8 +105,8 @@ class QuotePdfService {
       final index = entry.key;
       final item = entry.value;
       return [
-        (index + 1).toString(),
-        item.productName,
+ (index + 1).toString(),
+ item.product.name,
         item.quantity.toInt().toString(),
         format.format(item.unitPrice),
         format.format(item.totalPrice),

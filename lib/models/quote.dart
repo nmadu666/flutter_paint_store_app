@@ -1,63 +1,73 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_paint_store_app/models/customer.dart';
+import 'package:flutter_paint_store_app/models/paint_color.dart';
+import 'package:flutter_paint_store_app/models/product.dart';
+
+@immutable
 class Quote {
   final String id;
-  final String customerId;
+  final Customer? customer;
   final List<QuoteItem> items;
   final DateTime createdAt;
-  final String createdBy;
-  final double totalPrice;
-  Quote({
+
+  const Quote({
     required this.id,
-    required this.customerId,
+    this.customer,
     required this.items,
     required this.createdAt,
-    required this.createdBy,
-    required this.totalPrice,
-  });
-}
-
-class QuoteItem {
-  final String productId;
-  final String productName;
-  final String colorName;
-  final String hexCode;
-  final String base;
-  final double quantity;
-  final double unitPrice;
-  final double totalPrice;
-  final String sku;
-  QuoteItem({
-    required this.productId,
-    required this.productName,
-    required this.colorName,
-    required this.hexCode,
-    required this.base,
-    required this.quantity,
-    required this.unitPrice,
-    required this.totalPrice,
-    required this.sku,
   });
 
-  QuoteItem copyWith({
-    String? productId,
-    String? productName,
-    String? colorName,
-    String? hexCode,
-    String? base,
-    double? quantity,
-    double? unitPrice,
-    double? totalPrice,
-    String? sku,
+  double get totalPrice =>
+      items.fold(0.0, (sum, item) => sum + item.totalPrice);
+
+  Quote copyWith({
+    String? id,
+    Customer? customer,
+    List<QuoteItem>? items,
+    DateTime? createdAt,
   }) {
-    return QuoteItem(
-      productId: productId ?? this.productId,
-      productName: productName ?? this.productName,
-      colorName: colorName ?? this.colorName,
-      hexCode: hexCode ?? this.hexCode,
-      base: base ?? this.base,
-      quantity: quantity ?? this.quantity,
-      unitPrice: unitPrice ?? this.unitPrice,
-      totalPrice: totalPrice ?? this.totalPrice,
-      sku: sku ?? this.sku,
+    return Quote(
+      id: id ?? this.id,
+      customer: customer ?? this.customer,
+      items: items ?? this.items,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
+}
+
+@immutable
+class QuoteItem {
+  /// A unique identifier for this specific quote item instance.
+  final String id;
+  final Product product;
+  /// The color, if this is a tinted product. Null for non-tinted products.
+  final PaintColor? color;
+  final int quantity;
+  /// The price per unit at the time it was added to the quote.
+  final double unitPrice;
+
+  const QuoteItem({
+    required this.id,
+    required this.product,
+    this.color,
+    required this.quantity,
+    required this.unitPrice,
+  });
+
+  /// The total price for this line item.
+  double get totalPrice => unitPrice * quantity;
+
+  QuoteItem copyWith(
+          {String? id,
+          Product? product,
+          PaintColor? color,
+          int? quantity,
+          double? unitPrice}) =>
+      QuoteItem(
+        id: id ?? this.id,
+        product: product ?? this.product,
+        color: color ?? this.color,
+        quantity: quantity ?? this.quantity,
+        unitPrice: unitPrice ?? this.unitPrice,
+      );
 }
