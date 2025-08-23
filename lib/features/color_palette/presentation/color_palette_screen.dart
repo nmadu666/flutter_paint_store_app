@@ -263,7 +263,9 @@ class _ProductSelectionSheetState
                   // Filter children to only show those suitable for this color.
                   final suitableChildren = parentProduct.children.where((child) {
                     if (child.base == null ||
-                        parentProduct.tintingFormulaType == null) return false;
+                        parentProduct.tintingFormulaType == null) {
+                      return false;
+                    }
                     final isBasePhysicallySuitable =
                         isBaseSuitableForColor(child.base!, widget.color);
                     final hasPriceInfo = allColorPrices.any(

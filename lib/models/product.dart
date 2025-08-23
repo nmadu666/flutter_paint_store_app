@@ -1,128 +1,92 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_paint_store_app/models/product_pricing.dart';
+import 'package:equatable/equatable.dart';
 
-/// Represents a paint product available in the store.
-@immutable
-class Product {
-  final String id;
-  final String name;
-  final String code;
-  final String unit;
-
-  /// The type of tinting formula to use (e.g., 'int_1', 'ext_1', 'sd').
-  /// Null for non-tintable products.
-  final String? tintingFormulaType;
-  final String?
-  base; // Nullable, as some products might not have a base (e.g., primer)
-  /// The numeric value of the unit (e.g., 18 for an 18L can) used for tinting cost calculation.
-  final double unitValue;
-
-  /// The price of the base product before tinting.
-  final double basePrice;
-
-  /// List of prices for different price groups (e.g., retail, wholesale).
-  final List<ProductPricing> prices;
-
+/// Represents a single, sellable product SKU (Stock Keeping Unit).
+class Product extends Equatable {
   const Product({
     required this.id,
-    required this.name,
     required this.code,
-    required this.unit,
-    this.tintingFormulaType,
-    this.base,
-    required this.unitValue,
+    required this.name,
     required this.basePrice,
-    this.prices = const [],
+    required this.unit,
+    required this.unitValue,
+    this.base,
+    this.tintingFormulaType,
+    this.prices = const {},
   });
 
-  /// Deserializes the given `Map<String, dynamic>` into a [Product].
+  final String id;
+  final String code;
+  final String name;
+
+  /// The default/fallback price when no specific price list price is found.
+  final double basePrice;
+
+  /// A map where the key is the price group name (e.g., "Giá bán lẻ")
+  /// and the value is the price for that group.
+  /// This allows for O(1) price lookups.
+  final Map<String, double> prices;
+
+  final String unit; // e.g., "Lít", "Kg"
+  final double unitValue; // e.g., 1, 5, 18
+  final String? base; // e.g., 'A', 'B', 'C' for paint base
+  final String? tintingFormulaType; // e.g., 'DECO', 'PRO'
+
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       id: json['id'] as String,
-      name: json['name'] as String,
       code: json['code'] as String,
-      unit: json['unit'] as String,
-      tintingFormulaType: json['tintingFormulaType'] as String?,
-      base: json['base'] as String?,
-      unitValue: (json['unitValue'] as num).toDouble(),
+      name: json['name'] as String,
       basePrice: (json['basePrice'] as num).toDouble(),
-      prices: (json['prices'] as List<dynamic>?)
-              ?.map((e) => ProductPricing.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
+      unit: json['unit'] as String,
+      unitValue: (json['unitValue'] as num).toDouble(),
+      base: json['base'] as String?,
+      tintingFormulaType: json['tintingFormulaType'] as String?,
+      // Ensure prices are parsed correctly from JSON
+      prices: Map<String, double>.from(
+          (json['prices'] as Map<String, dynamic>?)?.map(
+                (key, value) => MapEntry(key, (value as num).toDouble()),
+              ) ??
+              {}),
     );
   }
 
-  /// Converts this [Product] into a `Map<String, dynamic>`.
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'code': code,
-      'unit': unit,
-      'tintingFormulaType': tintingFormulaType,
-      'base': base,
-      'unitValue': unitValue,
-      'basePrice': basePrice,
-      'prices': prices.map((e) => e.toJson()).toList(),
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'code': code,
+        'name': name,
+        'basePrice': basePrice,
+        'prices': prices,
+        'unit': unit,
+        'unitValue': unitValue,
+        'base': base,
+        'tintingFormulaType': tintingFormulaType,
+      };
 
   Product copyWith({
     String? id,
-    String? name,
     String? code,
-    String? unit,
-    String? tintingFormulaType,
-    String? base,
-    double? unitValue,
+    String? name,
     double? basePrice,
-    List<ProductPricing>? prices,
+    Map<String, double>? prices,
+    String? unit,
+    double? unitValue,
+    String? base,
+    String? tintingFormulaType,
   }) {
+    // For now, return a new instance with the same data
     return Product(
       id: id ?? this.id,
-      name: name ?? this.name,
       code: code ?? this.code,
-      unit: unit ?? this.unit,
-      tintingFormulaType: tintingFormulaType ?? this.tintingFormulaType,
-      base: base ?? this.base,
-      unitValue: unitValue ?? this.unitValue,
+      name: name ?? this.name,
       basePrice: basePrice ?? this.basePrice,
       prices: prices ?? this.prices,
+      unit: unit ?? this.unit,
+      unitValue: unitValue ?? this.unitValue,
+      base: base ?? this.base,
+      tintingFormulaType: tintingFormulaType ?? this.tintingFormulaType,
     );
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is Product &&
-        other.id == id &&
-        other.name == name &&
-        other.code == code &&
-        other.unit == unit &&
-        other.tintingFormulaType == tintingFormulaType &&
-        other.base == base &&
-        other.unitValue == unitValue &&
-        other.basePrice == basePrice &&
-        listEquals(other.prices, prices);
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-      name.hashCode ^
-      code.hashCode ^
-      unit.hashCode ^
-      tintingFormulaType.hashCode ^
-      base.hashCode ^
-      unitValue.hashCode ^
-      basePrice.hashCode ^
-      prices.hashCode;
-  }
-
-  @override
-  String toString() {
-    return 'Product(id: $id, name: $name, code: $code, unit: $unit, tintingFormulaType: $tintingFormulaType, base: $base, unitValue: $unitValue, basePrice: $basePrice, prices: $prices)';
-  }
+  List<Object?> get props => [id, code, name, basePrice, prices, unit, unitValue, base, tintingFormulaType];
 }

@@ -6,30 +6,27 @@ import 'package:flutter_paint_store_app/models/product.dart';
 @immutable
 class Quote {
   final String id;
-  final Customer? customer;
   final List<QuoteItem> items;
+  final Customer? customer;
   final DateTime createdAt;
 
   const Quote({
     required this.id,
-    this.customer,
     required this.items,
+    this.customer,
     required this.createdAt,
   });
 
-  double get totalPrice =>
-      items.fold(0.0, (sum, item) => sum + item.totalPrice);
-
   Quote copyWith({
     String? id,
-    Customer? customer,
     List<QuoteItem>? items,
+    Customer? customer,
     DateTime? createdAt,
   }) {
     return Quote(
       id: id ?? this.id,
-      customer: customer ?? this.customer,
       items: items ?? this.items,
+      customer: customer ?? this.customer,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -37,14 +34,15 @@ class Quote {
 
 @immutable
 class QuoteItem {
-  /// A unique identifier for this specific quote item instance.
   final String id;
   final Product product;
-  /// The color, if this is a tinted product. Null for non-tinted products.
   final PaintColor? color;
   final int quantity;
-  /// The price per unit at the time it was added to the quote.
   final double unitPrice;
+  final double tintingCost;
+  final String? note;
+  final double discountValue;
+  final bool isDiscountPercentage;
 
   const QuoteItem({
     required this.id,
@@ -52,22 +50,46 @@ class QuoteItem {
     this.color,
     required this.quantity,
     required this.unitPrice,
+    this.tintingCost = 0.0,
+    this.note,
+    this.discountValue = 0.0,
+    this.isDiscountPercentage = false,
   });
 
-  /// The total price for this line item.
-  double get totalPrice => unitPrice * quantity;
+  double get totalDiscount {
+    if (isDiscountPercentage) {
+      return (unitPrice * quantity) * (discountValue / 100);
+    }
+    return discountValue * quantity;
+  }
 
-  QuoteItem copyWith(
-          {String? id,
-          Product? product,
-          PaintColor? color,
-          int? quantity,
-          double? unitPrice}) =>
-      QuoteItem(
-        id: id ?? this.id,
-        product: product ?? this.product,
-        color: color ?? this.color,
-        quantity: quantity ?? this.quantity,
-        unitPrice: unitPrice ?? this.unitPrice,
-      );
+  double get totalPrice {
+    final basePriceTotal = unitPrice * quantity;
+    final totalTintingCost = tintingCost * quantity;
+    return (basePriceTotal - totalDiscount) + totalTintingCost;
+  }
+
+  QuoteItem copyWith({
+    String? id,
+    Product? product,
+    PaintColor? color,
+    int? quantity,
+    double? unitPrice,
+    double? tintingCost,
+    String? note,
+    double? discountValue,
+    bool? isDiscountPercentage,
+  }) {
+    return QuoteItem(
+      id: id ?? this.id,
+      product: product ?? this.product,
+      color: color ?? this.color,
+      quantity: quantity ?? this.quantity,
+      unitPrice: unitPrice ?? this.unitPrice,
+      tintingCost: tintingCost ?? this.tintingCost,
+      note: note ?? this.note,
+      discountValue: discountValue ?? this.discountValue,
+      isDiscountPercentage: isDiscountPercentage ?? this.isDiscountPercentage,
+    );
+  }
 }
