@@ -86,7 +86,7 @@ class SalesScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            flex: 3,
+            flex: 2,
             child: ReorderableDesktopCartTable(
               items: quote.items,
               onReorder: (oldIndex, newIndex) {
@@ -100,7 +100,15 @@ class SalesScreen extends ConsumerWidget {
             flex: 1,
             child: Padding(
               padding: const EdgeInsets.all(24.0),
-              child: PaymentSummary(onPrint: () => _handlePrintQuote(context, ref)),
+              child: Column(
+                children: [
+                  const SalesHeader(),
+                  Expanded(
+                    child: PaymentSummary(
+                        onPrint: () => _handlePrintQuote(context, ref)),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

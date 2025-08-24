@@ -7,7 +7,7 @@ import 'package:flutter_paint_store_app/models/paint_color_price.dart';
 import 'package:flutter_paint_store_app/models/parent_product.dart';
 import 'package:flutter_paint_store_app/data/mock_data.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
-import 'package:flutter_paint_store_app/features/sales/application/price_calculation_service.dart';
+import 'package:flutter_paint_store_app/features/sales/application/price_service.dart';
 
 // --- 1. UI State Providers ---
 
@@ -42,9 +42,9 @@ final brandsProvider = Provider<List<String>>((ref) {
 
 final collectionsProvider = Provider<List<String>>((ref) {
   final allColors = ref.watch(allColorsProvider);
-  final selectedBrand = ref.watch(selectedBrandProvider);
 
-  if (selectedBrand != null) {
+  final selectedBrand = ref.watch(selectedBrandProvider);
+  if (ref.watch(selectedBrandProvider) != null) {
     return allColors
         .where((c) => c.brand == selectedBrand)
         .map((c) => c.collection)
@@ -102,29 +102,24 @@ final suitableParentProductsProvider = FutureProvider.autoDispose
         allParentProductsProvider.future,
       );
       final allColorPrices = ref.watch(allColorPricesProvider);
-      final selectedBrand = ref.watch(selectedBrandProvider);
 
-      final brandFilteredProducts = selectedBrand == null
-          ? allParentProducts
-          : allParentProducts.where((p) => p.brand == selectedBrand);
+      // Filter products by the brand of the selected color
+      final brandFilteredProducts =
+          allParentProducts.where((p) => p.brand == color.brand);
 
       final suitableParents = brandFilteredProducts.where((parent) {
+        // A parent product is suitable if it has ANY child product that can be tinted
+        // with the selected color. Suitability is determined solely by price data.
         return parent.children.any((child) {
           if (child.base == null || parent.tintingFormulaType == null) {
             return false;
           }
-          final isBasePhysicallySuitable = isBaseSuitableForColor(
-            child.base!,
-            color,
-          );
-          final hasPriceInfo = allColorPrices.any(
+          return allColorPrices.any(
             (price) =>
                 price.code == color.code &&
                 price.base == child.base &&
                 price.tintingFormulaType == parent.tintingFormulaType,
           );
-
-          return isBasePhysicallySuitable && hasPriceInfo;
         });
       }).toList();
 
@@ -153,34 +148,6 @@ class ColorProductPair {
 
 final finalPriceProvider = Provider.autoDispose
     .family<double?, ColorProductPair>((ref, pair) {
-      final parent = ref
-          .watch(allParentProductsProvider)
-          .value
-          ?.firstWhereOrNull(
-            (p) => p.children.any((child) => child.id == pair.product.id),
-          );
-
-      if (parent?.tintingFormulaType == null || pair.product.base == null) {
-        return pair.product.basePrice;
-      }
-
-      final allColorPrices = ref.watch(allColorPricesProvider);
-
-      final colorPrice = allColorPrices.firstWhereOrNull(
-        (price) =>
-            price.code == pair.color.code &&
-            price.base == pair.product.base &&
-            price.tintingFormulaType == parent?.tintingFormulaType,
-      );
-
-      if (colorPrice == null) {
-        return null;
-      }
-
-      final tintingCost = calculateTintingCost(pair.product, colorPrice);
-      return pair.product.basePrice + tintingCost;
+      final priceService = ref.watch(priceServiceProvider);
+      return priceService.getFinalPrice(pair.color, pair.product);
     });
-
-final quantityProvider = StateProvider.autoDispose.family<int, String>(
-  (ref, productId) => 0,
-);

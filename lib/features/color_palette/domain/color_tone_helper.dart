@@ -68,26 +68,3 @@ ColorTone? getColorTone(Color color) {
 
   return null;
 }
-
-/// Determines if a base is suitable for a given color based on lightness.
-/// This is a simplified logic. A real-world scenario might involve more complex rules.
-/// - Base P, A (Light): For light colors (lightness > 0.85)
-/// - Base B, C (Medium): For mid-range colors (0.5 < lightness <= 0.85)
-/// - Base D (Deep): For dark colors (lightness <= 0.5)
-bool isBaseSuitableForColor(String base, PaintColor color) {
-  final lightness = color.lightness;
-  final upperCaseBase = base.toUpperCase();
-
-  if ((upperCaseBase == 'P' || upperCaseBase == 'A') && lightness > 0.85) {
-    return true;
-  }
-  if ((upperCaseBase == 'B' || upperCaseBase == 'C') &&
-      lightness > 0.5 &&
-      lightness <= 0.85) {
-    return true;
-  }
-  if ((upperCaseBase == 'D') && lightness <= 0.5) {
-    return true;
-  }
-  return false;
-}

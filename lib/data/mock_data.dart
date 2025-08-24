@@ -12,18 +12,113 @@ import '../models/product.dart';
 
 /// All available paint colors in the system.
 final List<PaintColor> mockAllColors = [
-  PaintColor(id: '1', name: 'Trắng Sứ', code: 'AP01-1', brand: 'Jotun', collection: 'Majestic', color: const Color(0xFFF8F8F8)),
-  PaintColor(id: '2', name: 'Vàng Chanh', code: 'AP02-3', brand: 'Jotun', collection: 'Majestic', color: const Color(0xFFFFF59D)),
-  PaintColor(id: '3', name: 'Xanh Bạc Hà', code: 'AP03-2', brand: 'Dulux', collection: 'Weathershield', color: const Color(0xFFB2DFDB)),
-  PaintColor(id: '4', name: 'Hồng Phấn', code: 'AP04-1', brand: 'Dulux', collection: 'Ambiance 5-in-1', color: const Color(0xFFFFCDD2)),
-  PaintColor(id: '5', name: 'Xám Ghi', code: 'AP05-4', brand: 'Jotun', collection: 'Gardex', color: const Color(0xFFBDBDBD), ncs: 'S2000-N'),
-  PaintColor(id: '6', name: 'Xanh Dương Đậm', code: 'AP06-5', brand: 'Dulux', collection: 'Weathershield', color: const Color(0xFF1A237E), ncs: 'S7020-R90B'),
-  PaintColor(id: '7', name: 'Kem Bơ', code: 'AP07-1', brand: 'Jotun', collection: 'Majestic', color: const Color(0xFFFFF9C4)),
-  PaintColor(id: '8', name: 'Xanh Lá Cây', code: 'AP08-3', brand: 'Dulux', collection: 'EasyClean', color: const Color(0xFF4CAF50)),
-  PaintColor(id: '9', name: 'Đỏ Đô', code: 'AP09-5', brand: 'Jotun', collection: 'Gardex', color: const Color(0xFFB71C1C)),
-  PaintColor(id: '10', name: 'Tím Lavender', code: 'AP10-2', brand: 'Dulux', collection: 'Ambiance 5-in-1', color: const Color(0xFFD1C4E9)),
-  PaintColor(id: '11', name: 'Cam San Hô', code: 'AP11-3', brand: 'Jotun', collection: 'Majestic', color: const Color(0xFFFF8A65)),
-  PaintColor(id: '12', name: 'Đen Mịn', code: 'AP12-6', brand: 'Dulux', collection: 'Weathershield', color: const Color(0xFF212121)),
+  PaintColor(
+    id: '1',
+    name: 'Trắng Sứ',
+    code: 'AP01-1',
+    brand: 'Jotun',
+    collection: 'Majestic',
+    color: const Color(0xFFF8F8F8),
+  ),
+  PaintColor(
+    id: '2',
+    name: 'Vàng Chanh',
+    code: 'AP02-3',
+    brand: 'Jotun',
+    collection: 'Majestic',
+    color: const Color(0xFFFFF59D),
+  ),
+  PaintColor(
+    id: '3',
+    name: 'Xanh Bạc Hà',
+    code: 'AP03-2',
+    brand: 'Dulux',
+    collection: 'Weathershield',
+    color: const Color(0xFFB2DFDB),
+  ),
+  PaintColor(
+    id: '4',
+    name: 'Hồng Phấn',
+    code: 'AP04-1',
+    brand: 'Dulux',
+    collection: 'Ambiance 5-in-1',
+    color: const Color(0xFFFFCDD2),
+  ),
+  PaintColor(
+    id: '5',
+    name: 'Xám Ghi',
+    code: 'AP05-4',
+    brand: 'Jotun',
+    collection: 'Gardex',
+    color: const Color(0xFFBDBDBD),
+    ncs: 'S2000-N',
+  ),
+  PaintColor(
+    id: '6',
+    name: 'Xanh Dương Đậm',
+    code: 'AP06-5',
+    brand: 'Dulux',
+    collection: 'Weathershield',
+    color: const Color(0xFF1A237E),
+    ncs: 'S7020-R90B',
+  ),
+  PaintColor(
+    id: '7',
+    name: 'Kem Bơ',
+    code: 'AP07-1',
+    brand: 'Jotun',
+    collection: 'Majestic',
+    color: const Color(0xFFFFF9C4),
+  ),
+  PaintColor(
+    id: '8',
+    name: 'Xanh Lá Cây',
+    code: 'AP08-3',
+    brand: 'Dulux',
+    collection: 'EasyClean',
+    color: const Color(0xFF4CAF50),
+  ),
+  PaintColor(
+    id: '9',
+    name: 'Đỏ Đô',
+    code: 'AP09-5',
+    brand: 'Jotun',
+    collection: 'Gardex',
+    color: const Color(0xFFB71C1C),
+  ),
+  PaintColor(
+    id: '10',
+    name: 'Tím Lavender',
+    code: 'AP10-2',
+    brand: 'Dulux',
+    collection: 'Ambiance 5-in-1',
+    color: const Color(0xFFD1C4E9),
+  ),
+  PaintColor(
+    id: '11',
+    name: 'Cam San Hô',
+    code: 'AP11-3',
+    brand: 'Jotun',
+    collection: 'Majestic',
+    color: const Color(0xFFFF8A65),
+  ),
+  PaintColor(
+    id: '12',
+    name: 'Đen Mịn',
+    code: 'AP12-6',
+    brand: 'Dulux',
+    collection: 'Weathershield',
+    color: const Color(0xFF212121),
+  ),
+  PaintColor(
+    id: '13',
+    name: 'Grey Event',
+    code: '9912',
+    brand: 'Jotun',
+    collection: 'New Collection',
+    color: const Color(0xFF9E9F9D),
+    ncs: 'S4000-N',
+  ),
 ];
 
 /// Parent products that require color tinting.
@@ -34,11 +129,36 @@ final List<ParentProduct> mockParentProducts = [
     name: 'Jotun Majestic',
     brand: 'Jotun',
     category: 'Sơn nội thất',
+    imageUrl: 'https://picsum.photos/seed/jotun-majestic/400/300',
     tintingFormulaType: 'int_1', // Matches prices in mockColorPrices
     children: [
-      Product(id: 'JM-A-1', name: 'Jotun Majestic - Base A', code: 'JMA1', unit: 'Lon', base: 'A', unitValue: 1, basePrice: 100000),
-      Product(id: 'JM-A-5', name: 'Jotun Majestic - Base A', code: 'JMA5', unit: 'Lon', base: 'A', unitValue: 5, basePrice: 450000),
-      Product(id: 'JM-D-1', name: 'Jotun Majestic - Base D', code: 'JMD1', unit: 'Lon', base: 'D', unitValue: 1, basePrice: 95000),
+      Product(
+        id: 'JM-A-1',
+        name: 'Jotun Majestic - Base A',
+        code: 'JMA1',
+        unit: 'Lon',
+        base: 'A',
+        unitValue: 1,
+        basePrice: 100000,
+      ),
+      Product(
+        id: 'JM-A-5',
+        name: 'Jotun Majestic - Base A',
+        code: 'JMA5',
+        unit: 'Lon',
+        base: 'A',
+        unitValue: 5,
+        basePrice: 450000,
+      ),
+      Product(
+        id: 'JM-D-1',
+        name: 'Jotun Majestic - Base D',
+        code: 'JMD1',
+        unit: 'Lon',
+        base: 'D',
+        unitValue: 1,
+        basePrice: 95000,
+      ),
     ],
   ),
   ParentProduct(
@@ -46,10 +166,27 @@ final List<ParentProduct> mockParentProducts = [
     name: 'Dulux Weathershield',
     brand: 'Dulux',
     category: 'Sơn ngoại thất',
+    imageUrl: 'https://picsum.photos/seed/dulux-weathershield/400/300',
     tintingFormulaType: 'ext_1', // Matches prices in mockColorPrices
     children: [
-      Product(id: 'DW-A-5', name: 'Dulux Weathershield - Base A', code: 'DWA5', unit: 'Thùng', base: 'A', unitValue: 5, basePrice: 600000),
-      Product(id: 'DW-B-5', name: 'Dulux Weathershield - Base B', code: 'DWB5', unit: 'Thùng', base: 'B', unitValue: 5, basePrice: 580000),
+      Product(
+        id: 'DW-A-5',
+        name: 'Dulux Weathershield - Base A',
+        code: 'DWA5',
+        unit: 'Thùng',
+        base: 'A',
+        unitValue: 5,
+        basePrice: 600000,
+      ),
+      Product(
+        id: 'DW-B-5',
+        name: 'Dulux Weathershield - Base B',
+        code: 'DWB5',
+        unit: 'Thùng',
+        base: 'B',
+        unitValue: 5,
+        basePrice: 580000,
+      ),
     ],
   ),
   ParentProduct(
@@ -57,43 +194,179 @@ final List<ParentProduct> mockParentProducts = [
     name: 'Dulux Ambiance 5-in-1',
     brand: 'Dulux',
     category: 'Sơn nội thất cao cấp',
+    imageUrl: 'https://picsum.photos/seed/dulux-ambiance/400/300',
     tintingFormulaType: 'int_2', // Matches prices in mockColorPrices
     children: [
-      Product(id: 'DA-C-5', name: 'Dulux Ambiance 5-in-1 - Base C', code: 'DA5C', unit: 'Lon', base: 'C', unitValue: 5, basePrice: 750000),
+      Product(
+        id: 'DA-C-5',
+        name: 'Dulux Ambiance 5-in-1 - Base C',
+        code: 'DA5C',
+        unit: 'Lon',
+        base: 'C',
+        unitValue: 5,
+        basePrice: 750000,
+      ),
+    ],
+  ),
+  ParentProduct(
+    id: 'essence-easy-clean',
+    name: 'Essence dễ lau chùi',
+    brand: 'Jotun',
+    category: 'Sơn nội thất',
+    imageUrl: 'https://picsum.photos/seed/essence-easy-clean/400/300',
+    tintingFormulaType: 'int_2',
+    children: [
+      Product(
+        id: 'EEC-A-1',
+        name: 'Essence - Base A',
+        code: 'EECA1',
+        unit: 'Lon',
+        base: 'A',
+        unitValue: 1,
+        basePrice: 120000,
+      ),
+      Product(
+        id: 'EEC-C-1',
+        name: 'Essence - Base C',
+        code: 'EECC1',
+        unit: 'Lon',
+        base: 'C',
+        unitValue: 1,
+        basePrice: 115000,
+      ),
+      Product(
+        id: 'EEC-A-5',
+        name: 'Essence - Base A',
+        code: 'EECA5',
+        unit: 'Lon',
+        base: 'A',
+        unitValue: 5,
+        basePrice: 550000,
+      ),
+      Product(
+        id: 'EEC-C-5',
+        name: 'Essence - Base C',
+        code: 'EECC5',
+        unit: 'Lon',
+        base: 'C',
+        unitValue: 5,
+        basePrice: 540000,
+      ),
+      Product(
+        id: 'EEC-A-18',
+        name: 'Essence - Base A',
+        code: 'EECA18',
+        unit: 'Thùng',
+        base: 'A',
+        unitValue: 18,
+        basePrice: 1800000,
+      ),
+    ],
+  ),
+  ParentProduct(
+    id: 'jotun-color-fade-resistant',
+    name: 'Chống phai màu',
+    brand: 'Jotun',
+    category: 'Sơn ngoại thất',
+    imageUrl: 'https://picsum.photos/seed/jotun-fade-resistant/400/300',
+    tintingFormulaType: 'ext_1',
+    children: [
+      Product(
+        id: 'JFR-A-1',
+        name: 'Chống phai màu - Base A',
+        code: 'JFRA1',
+        unit: 'Lon',
+        base: 'A',
+        unitValue: 1,
+        basePrice: 150000,
+      ),
+      Product(
+        id: 'JFR-B-1',
+        name: 'Chống phai màu - Base B',
+        code: 'JFRB1',
+        unit: 'Lon',
+        base: 'B',
+        unitValue: 1,
+        basePrice: 145000,
+      ),
+      Product(
+        id: 'JFR-C-1',
+        name: 'Chống phai màu - Base C',
+        code: 'JFRC1',
+        unit: 'Lon',
+        base: 'C',
+        unitValue: 1,
+        basePrice: 140000,
+      ),
+      Product(
+        id: 'JFR-A-5',
+        name: 'Chống phai màu - Base A',
+        code: 'JFRA5',
+        unit: 'Lon',
+        base: 'A',
+        unitValue: 5,
+        basePrice: 700000,
+      ),
+      Product(
+        id: 'JFR-B-5',
+        name: 'Chống phai màu - Base B',
+        code: 'JFRB5',
+        unit: 'Lon',
+        base: 'B',
+        unitValue: 5,
+        basePrice: 680000,
+      ),
+      Product(
+        id: 'JFR-C-5',
+        name: 'Chống phai màu - Base C',
+        code: 'JFRC5',
+        unit: 'Lon',
+        base: 'C',
+        unitValue: 5,
+        basePrice: 670000,
+      ),
+      Product(
+        id: 'JFR-A-15',
+        name: 'Chống phai màu - Base A',
+        code: 'JFRA15',
+        unit: 'Thùng',
+        base: 'A',
+        unitValue: 15,
+        basePrice: 2000000,
+      ),
     ],
   ),
 ];
 
 /// Standalone products that are sold as-is (no color tinting).
 final List<Product> mockStandaloneProducts = [
-    Product(
-      id: 'JS-Primer-18',
-      code: 'VT002',
-      name: 'Sơn Lót Chống Kiềm Nội Thất Jotun',
-      basePrice: 220000,
-      unit: 'Thùng',
-      unitValue: 18,
-      prices: {
-        'Giá bán lẻ': 220000,
-        'Giá đại lý cấp 1': 200000,
-        'Giá dự án': 190000,
-      },
-    ),
-    Product(
-      id: 'DP-Putty-40',
-      code: 'VT005',
-      name: 'Bột Trét Tường Ngoại Thất Dulux',
-      basePrice: 100000,
-      unit: 'Bao',
-      unitValue: 40,
-      prices: {
-        'Giá bán lẻ': 100000,
-        'Giá đại lý cấp 1': 90000,
-        'Giá dự án': 85000,
-      },
-    ),
+  Product(
+    id: 'JS-Primer-18',
+    code: 'VT002',
+    name: 'Sơn Lót Chống Kiềm Nội Thất Jotun',
+    basePrice: 220000,
+    unit: 'Thùng',
+    unitValue: 18,
+    prices: {
+      'Giá bán lẻ': 220000,
+      'Giá đại lý cấp 1': 200000,
+      'Giá dự án': 190000,
+    },
+  ),
+  Product(
+    id: 'DP-Putty-40',
+    code: 'VT005',
+    name: 'Bột Trét Tường Ngoại Thất Dulux',
+    basePrice: 100000,
+    unit: 'Bao',
+    unitValue: 40,
+    prices: {
+      'Giá bán lẻ': 100000,
+      'Giá đại lý cấp 1': 90000,
+      'Giá dự án': 85000,
+    },
+  ),
 ];
-
 
 // ===========================================================================
 // 2. Derived Data - Data created by combining or processing the raw data
@@ -102,21 +375,98 @@ final List<Product> mockStandaloneProducts = [
 /// Pricing information for each color, based on the tinting formula and base.
 final List<PaintColorPrice> mockColorPrices = [
   // Prices for 'Trắng Sứ' (AP01-1)
-  PaintColorPrice.fromPaintColor(mockAllColors[0], tintingFormulaType: 'int_1', base: 'A', pricePerMl: 0.05),
-  PaintColorPrice.fromPaintColor(mockAllColors[0], tintingFormulaType: 'ext_1', base: 'A', pricePerMl: 0.06),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[0],
+    tintingFormulaType: 'int_1',
+    base: 'A',
+    pricePerMl: 0.05,
+  ),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[0],
+    tintingFormulaType: 'ext_1',
+    base: 'A',
+    pricePerMl: 0.06,
+  ),
   // Prices for 'Vàng Chanh' (AP02-3)
-  PaintColorPrice.fromPaintColor(mockAllColors[1], tintingFormulaType: 'int_1', base: 'A', pricePerMl: 0.1),
-  PaintColorPrice.fromPaintColor(mockAllColors[1], tintingFormulaType: 'ext_1', base: 'A', pricePerMl: 0.12),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[1],
+    tintingFormulaType: 'int_1',
+    base: 'A',
+    pricePerMl: 0.1,
+  ),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[1],
+    tintingFormulaType: 'ext_1',
+    base: 'A',
+    pricePerMl: 0.12,
+  ),
   // Prices for 'Xanh Bạc Hà' (AP03-2)
-  PaintColorPrice.fromPaintColor(mockAllColors[2], tintingFormulaType: 'ext_1', base: 'B', pricePerMl: 0.15),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[2],
+    tintingFormulaType: 'ext_1',
+    base: 'B',
+    pricePerMl: 0.15,
+  ),
   // Prices for 'Hồng Phấn' (AP04-1)
-  PaintColorPrice.fromPaintColor(mockAllColors[3], tintingFormulaType: 'int_2', base: 'C', pricePerMl: 0.18),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[3],
+    tintingFormulaType: 'int_2',
+    base: 'C',
+    pricePerMl: 0.18,
+  ),
   // Prices for 'Xanh Dương Đậm' (AP06-5)
-  PaintColorPrice.fromPaintColor(mockAllColors[5], tintingFormulaType: 'ext_1', base: 'D', pricePerMl: 0.25), // Note: No 'D' base in mockParentProducts for ext_1, for testing purposes
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[5],
+    tintingFormulaType: 'ext_1',
+    base: 'D',
+    pricePerMl: 0.25,
+  ), // Note: No 'D' base in mockParentProducts for ext_1, for testing purposes
   // Prices for 'Đỏ Đô' (AP09-5)
-  PaintColorPrice.fromPaintColor(mockAllColors[8], tintingFormulaType: 'int_1', base: 'D', pricePerMl: 0.3),
-];
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[8],
+    tintingFormulaType: 'int_1',
+    base: 'D',
+    pricePerMl: 0.3,
+  ),
 
+  // Prices for 'Grey Event' (9912) - Index 12
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[12],
+    tintingFormulaType: 'int_1',
+    base: 'B',
+    pricePerMl: 6,
+  ),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[12],
+    tintingFormulaType: 'int_2',
+    base: 'A',
+    pricePerMl: 7,
+  ),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[12],
+    tintingFormulaType: 'ext_1',
+    base: 'B',
+    pricePerMl: 36,
+  ),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[12],
+    tintingFormulaType: 'ext_2',
+    base: 'B',
+    pricePerMl: 36,
+  ),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[12],
+    tintingFormulaType: 'ext_3',
+    base: 'A',
+    pricePerMl: 7,
+  ),
+  PaintColorPrice.fromPaintColor(
+    mockAllColors[12],
+    tintingFormulaType: 'sd',
+    base: 'B',
+    pricePerMl: 36,
+  ),
+];
 
 /// A flat list of all individual products (SKUs) available for sale.
 /// This is generated by combining the children of `mockParentProducts`

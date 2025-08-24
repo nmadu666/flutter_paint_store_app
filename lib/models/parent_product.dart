@@ -1,17 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
 
-/// Represents a main product line that contains various child products (bases).
-/// For example, "Jotun Majestic" is a ParentProduct, and its children are
-/// "Jotun Majestic - Base A", "Jotun Majestic - Base D", etc.
 @immutable
 class ParentProduct {
   final String id;
   final String name;
   final String brand;
   final String category;
-  /// The type of tinting formula shared by all children, if applicable.
-  /// e.g., 'int_1', 'ext_1'. Null for non-tintable product lines.
+  final String imageUrl;
   final String? tintingFormulaType;
   final List<Product> children;
 
@@ -20,6 +16,7 @@ class ParentProduct {
     required this.name,
     required this.brand,
     required this.category,
+    required this.imageUrl,
     this.tintingFormulaType,
     required this.children,
   });
@@ -33,6 +30,7 @@ class ParentProduct {
         other.name == name &&
         other.brand == brand &&
         other.category == category &&
+        other.imageUrl == imageUrl &&
         other.tintingFormulaType == tintingFormulaType &&
         listEquals(other.children, children);
   }
@@ -43,13 +41,14 @@ class ParentProduct {
         name.hashCode ^
         brand.hashCode ^
         category.hashCode ^
+        imageUrl.hashCode ^
         tintingFormulaType.hashCode ^
         children.hashCode;
   }
 
   @override
   String toString() {
-    return 'ParentProduct(id: $id, name: $name, brand: $brand, category: $category, tintingFormulaType: $tintingFormulaType, children: $children)';
+    return 'ParentProduct(id: $id, name: $name, brand: $brand, category: $category, imageUrl: $imageUrl, tintingFormulaType: $tintingFormulaType, children: $children)';
   }
 
   ParentProduct copyWith({
@@ -57,6 +56,7 @@ class ParentProduct {
     String? name,
     String? brand,
     String? category,
+    String? imageUrl,
     String? tintingFormulaType,
     List<Product>? children,
   }) {
@@ -65,6 +65,7 @@ class ParentProduct {
       name: name ?? this.name,
       brand: brand ?? this.brand,
       category: category ?? this.category,
+      imageUrl: imageUrl ?? this.imageUrl,
       tintingFormulaType: tintingFormulaType ?? this.tintingFormulaType,
       children: children ?? this.children,
     );

@@ -1,26 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_paint_store_app/data/mock_data.dart';
 import 'package:flutter_paint_store_app/features/color_palette/application/color_palette_state.dart';
+import 'package:flutter_paint_store_app/models/cost_item.dart';
 import 'package:flutter_paint_store_app/models/customer.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_paint_store_app/models/paint_color.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
 import 'package:flutter_paint_store_app/models/quote.dart';
-import 'price_calculation_service.dart';
+import 'package:flutter_paint_store_app/features/sales/application/price_service.dart';
 
-// --- UI State Providers ---
+// --- Các provider cho trạng thái UI ---
 
-final salesSearchQueryProvider = StateProvider<String>((ref) => '');
-final isShowingCartMobileProvider = StateProvider<bool>((ref) => false);
-final isPrintingProvider = StateProvider<bool>((ref) => false);
+// Provider để lưu trữ chuỗi tìm kiếm trên màn hình bán hàng
+final salesSearchQueryProvider = StateProvider<String>((ref) => '', name: 'salesSearchQueryProvider');
+// Provider để kiểm tra xem giỏ hàng có đang được hiển thị trên mobile không
+final isShowingCartMobileProvider = StateProvider<bool>((ref) => false, name: 'isShowingCartMobileProvider');
+// Provider để kiểm tra xem có đang in báo giá không
+final isPrintingProvider = StateProvider<bool>((ref) => false, name: 'isPrintingProvider');
 
-// --- Data Providers ---
+// --- Các provider cho dữ liệu ---
 
+// Provider để lấy danh sách sản phẩm bán hàng (dữ liệu giả)
 final salesProductsProvider = FutureProvider<List<Product>>((ref) async {
   await Future.delayed(const Duration(milliseconds: 300));
   return mockSalesProducts;
-});
+}, name: 'salesProductsProvider');
 
+// Provider để lọc danh sách sản phẩm bán hàng dựa trên chuỗi tìm kiếm
 final filteredSalesProductsProvider = Provider<List<Product>>((ref) {
   final query = ref.watch(salesSearchQueryProvider);
   final productsAsyncValue = ref.watch(salesProductsProvider);
@@ -42,8 +48,9 @@ final filteredSalesProductsProvider = Provider<List<Product>>((ref) {
     loading: () => [],
     error: (err, stack) => [],
   );
-});
+}, name: 'filteredSalesProductsProvider');
 
+// Notifier để quản lý trạng thái của báo giá hiện tại
 class QuoteNotifier extends StateNotifier<Quote> {
   QuoteNotifier(this.ref)
       : super(
@@ -56,6 +63,7 @@ class QuoteNotifier extends StateNotifier<Quote> {
 
   final Ref ref;
 
+  // Thêm một sản phẩm vào báo giá
   void addItem({
     required Product product,
     PaintColor? color,
@@ -86,6 +94,31 @@ class QuoteNotifier extends StateNotifier<Quote> {
     }
   }
 
+  // Thêm một danh sách các mục chi phí (từ dialog chi tiết giá) vào báo giá
+  void addCostItems(List<CostItem> costItems, PaintColor color) {
+    final newQuoteItems = costItems.map((costItem) {
+      // Tính toán đơn giá cuối cùng theo yêu cầu
+      final finalUnitPrice = costItem.unitPrice + costItem.tintCost - costItem.discount;
+
+      return QuoteItem(
+        id: DateTime.now().millisecondsSinceEpoch.toString() + costItem.product.id,
+        product: costItem.product,
+        color: color,
+        quantity: costItem.quantity,
+        // Đưa đơn giá cuối cùng vào trường unitPrice
+        unitPrice: finalUnitPrice,
+        // Đặt tintingCost và discountValue thành 0 để tránh tính trùng lặp
+        tintingCost: 0,
+        discountValue: 0,
+        isDiscountPercentage: false,
+        note: '${color.code} ${color.name}',
+      );
+    }).toList();
+
+    state = state.copyWith(items: [...state.items, ...newQuoteItems]);
+  }
+
+  // Thêm một bản sao của một mục trong báo giá
   void addDuplicateItem(QuoteItem item) {
     final newItem = item.copyWith(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -93,6 +126,7 @@ class QuoteNotifier extends StateNotifier<Quote> {
     state = state.copyWith(items: [...state.items, newItem]);
   }
 
+  // Cập nhật số lượng của một mục trong báo giá
   void updateQuantity(String quoteItemId, int newQuantity) {
     final items = List<QuoteItem>.from(state.items);
     final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
@@ -107,12 +141,14 @@ class QuoteNotifier extends StateNotifier<Quote> {
     }
   }
 
+  // Xóa một mục khỏi báo giá
   void removeItem(String quoteItemId) {
     state = state.copyWith(
       items: state.items.where((item) => item.id != quoteItemId).toList(),
     );
   }
 
+  // Cập nhật đơn giá của một mục trong báo giá
   void updateUnitPrice(String quoteItemId, double newUnitPrice) {
     final items = List<QuoteItem>.from(state.items);
     final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
@@ -123,6 +159,7 @@ class QuoteNotifier extends StateNotifier<Quote> {
     }
   }
 
+  // Áp dụng giảm giá cho một mục trong báo giá
   void applyDiscount(String quoteItemId, double value, bool isPercentage) {
     final items = List<QuoteItem>.from(state.items);
     final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
@@ -136,6 +173,7 @@ class QuoteNotifier extends StateNotifier<Quote> {
     }
   }
 
+  // Cập nhật ghi chú cho một mục trong báo giá
   void updateNote(String quoteItemId, String note) {
     final items = List<QuoteItem>.from(state.items);
     final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
@@ -146,6 +184,7 @@ class QuoteNotifier extends StateNotifier<Quote> {
     }
   }
 
+  // Cập nhật tất cả giá trong báo giá dựa trên bảng giá đã chọn
   void updateAllPrices() {
     final newPriceList = ref.read(selectedPriceListProvider);
     final updatedItems = state.items.map((item) {
@@ -156,39 +195,28 @@ class QuoteNotifier extends StateNotifier<Quote> {
     state = state.copyWith(items: updatedItems);
   }
 
+  // Tính toán đơn giá dựa trên bảng giá
   double? _calculateUnitPrice({required Product product, String? priceList}) {
     final selectedPriceList = priceList ?? ref.read(selectedPriceListProvider);
     return product.prices[selectedPriceList] ?? product.basePrice;
   }
 
+  // Tính toán chi phí pha màu
   double? _calculateTintingCost(Product product, PaintColor color) {
-    final parentProduct = ref.read(allParentProductsProvider).value?.firstWhereOrNull((p) => p.children.any((child) => child.id == product.id));
-
-    if (parentProduct == null || parentProduct.tintingFormulaType == null) {
-        return 0.0;
-    }
-
-    final colorPrice = ref.read(allColorPricesProvider).firstWhereOrNull(
-          (p) =>
-              p.code == color.code &&
-              p.base == product.base &&
-              p.tintingFormulaType == parentProduct.tintingFormulaType,
-        );
-
-    if (colorPrice == null) {
-      print(
-        'Error: Price not found for color ${color.code}, base ${product.base}, formula ${parentProduct.tintingFormulaType}',
-      );
+    final priceService = ref.read(priceServiceProvider);
+    final finalPrice = priceService.getFinalPrice(color, product);
+    if (finalPrice == null) {
       return null;
     }
-
-    return calculateTintingCost(product, colorPrice);
+    return finalPrice - product.basePrice;
   }
 
+  // Xóa tất cả các mục trong báo giá
   void clear() {
     state = state.copyWith(items: [], customer: null);
   }
 
+  // Sắp xếp lại thứ tự các mục trong báo giá
   void reorderItem(int oldIndex, int newIndex) {
     final items = List<QuoteItem>.from(state.items);
     if (oldIndex < newIndex) {
@@ -200,40 +228,47 @@ class QuoteNotifier extends StateNotifier<Quote> {
   }
 }
 
+// Provider chính cho báo giá
 final quoteProvider = StateNotifierProvider<QuoteNotifier, Quote>((ref) {
   final notifier = QuoteNotifier(ref);
 
-  ref.listen<String>(selectedPriceListProvider, (previous, next) {
+  // Lắng nghe sự thay đổi của bảng giá và cập nhật lại tất cả giá
+  ref.listen<String?>(selectedPriceListProvider, (previous, next) {
     if (previous != next) {
       notifier.updateAllPrices();
     }
   });
 
   return notifier;
-});
+}, name: 'quoteProvider');
 
+// Provider để tính tổng tiền của báo giá
 final quoteTotalProvider = Provider<double>((ref) {
   final quoteItems = ref.watch(quoteProvider).items;
   if (quoteItems.isEmpty) return 0.0;
   return quoteItems.fold(0.0, (sum, item) => sum + item.totalPrice);
-});
+}, name: 'quoteTotalProvider');
 
+// Provider cho danh sách khách hàng (dữ liệu giả)
 final customersProvider = Provider<List<Customer>>((ref) {
   return [
     Customer(id: '1', name: 'Khách lẻ', phone: '', address: ''),
     Customer(id: '2', name: 'Anh Sơn - Cầu Giấy', phone: '', address: ''),
     Customer(id: '3', name: 'Công ty Xây dựng ABC', phone: '', address: ''),
   ];
-});
+}, name: 'customersProvider');
 
+// Provider cho khách hàng đã chọn
 final selectedCustomerProvider = StateProvider<Customer?>((ref) {
   return ref.watch(customersProvider).first;
-});
+}, name: 'selectedCustomerProvider');
 
+// Provider cho danh sách các bảng giá
 final priceListsProvider = Provider<List<String>>((ref) {
   return ['Giá bán lẻ', 'Giá đại lý cấp 1', 'Giá dự án'];
-});
+}, name: 'priceListsProvider');
 
-final selectedPriceListProvider = StateProvider<String>((ref) {
+// Provider cho bảng giá đã chọn
+final selectedPriceListProvider = StateProvider<String?>((ref) {
   return ref.watch(priceListsProvider).first;
-});
+}, name: 'selectedPriceListProvider');

@@ -75,10 +75,6 @@ class SalesAppBar extends ConsumerWidget implements PreferredSizeWidget {
     return AppBar(
       title: const Text('Tạo Báo Giá / Đơn Hàng'),
       actions: [
-        const _CustomerSelector(),
-        const SizedBox(width: 8),
-        const _PriceListSelector(),
-        const SizedBox(width: 8),
         SizedBox(
           width: 300,
           child: allProductsAsync.when(
@@ -246,7 +242,7 @@ class _PriceListSelector extends ConsumerWidget {
             const Icon(Icons.sell_outlined, size: 20),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(selectedPriceList, overflow: TextOverflow.ellipsis),
+              child: Text(selectedPriceList!, overflow: TextOverflow.ellipsis),
             ),
             const Icon(Icons.arrow_drop_down, size: 18),
           ],

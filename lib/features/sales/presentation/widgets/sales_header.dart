@@ -8,16 +8,35 @@ class SalesHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      child: Row(
-        children: [
-          Expanded(child: CustomerSelector()),
-          SizedBox(width: 8),
-          Expanded(child: PriceListSelector()),
-        ],
-      ),
-    );
+    // Check screen size to determine layout
+    final isDesktop = MediaQuery.of(context).size.width > 900;
+
+    if (isDesktop) {
+      // For desktop, use a Column as they will be in a narrow column
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 24.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 4,
+          children: [
+            CustomerSelector(),
+            PriceListSelector(),
+          ],
+        ),
+      );
+    } else {
+      // For mobile, use a Row
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Row(
+          children: [
+            Expanded(child: CustomerSelector()),
+            SizedBox(width: 8),
+            Expanded(child: PriceListSelector()),
+          ],
+        ),
+      );
+    }
   }
 }
 
@@ -99,7 +118,7 @@ class PriceListSelector extends ConsumerWidget {
             const Icon(Icons.sell_outlined, size: 20),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(selectedPriceList, overflow: TextOverflow.ellipsis),
+              child: Text(selectedPriceList!, overflow: TextOverflow.ellipsis),
             ),
             const Icon(Icons.arrow_drop_down, size: 18),
           ],
