@@ -98,7 +98,7 @@ class DesktopCartRow extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.copy_outlined, size: 20),
                     tooltip: 'Thêm dòng mới',
-                    onPressed: () => ref.read(quoteProvider.notifier).addDuplicateItem(item),
+                    onPressed: () => ref.read(inProgressQuotesProvider.notifier).addDuplicateItem(item),
                   ),
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 20),
@@ -108,7 +108,7 @@ class DesktopCartRow extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 20),
                     tooltip: 'Xóa',
-                    onPressed: () => ref.read(quoteProvider.notifier).removeItem(item.id),
+                    onPressed: () => ref.read(inProgressQuotesProvider.notifier).removeItem(item.id),
                   ),
                 ],
               ),

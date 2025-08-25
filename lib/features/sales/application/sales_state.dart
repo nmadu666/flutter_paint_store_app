@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_paint_store_app/data/mock_data.dart';
 import 'package:flutter_paint_store_app/features/color_palette/application/color_palette_state.dart';
@@ -8,9 +10,11 @@ import 'package:flutter_paint_store_app/models/paint_color.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
 import 'package:flutter_paint_store_app/models/quote.dart';
 import 'package:flutter_paint_store_app/features/sales/application/price_service.dart';
+import 'package:flutter_paint_store_app/features/sales/infrastructure/quote_local_storage_service.dart';
 
-// --- Các provider cho trạng thái UI ---
+// --- UI State Providers ---
 
+<<<<<<< HEAD
 // Provider để lưu trữ chuỗi tìm kiếm trên màn hình bán hàng
 final salesSearchQueryProvider = StateProvider<String>(
   (ref) => '',
@@ -26,16 +30,19 @@ final isPrintingProvider = StateProvider<bool>(
   (ref) => false,
   name: 'isPrintingProvider',
 );
+=======
+final salesSearchQueryProvider = StateProvider<String>((ref) => '', name: 'salesSearchQueryProvider');
+final isShowingCartMobileProvider = StateProvider<bool>((ref) => false, name: 'isShowingCartMobileProvider');
+final isPrintingProvider = StateProvider<bool>((ref) => false, name: 'isPrintingProvider');
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
 
-// --- Các provider cho dữ liệu ---
+// --- Data Providers ---
 
-// Provider để lấy danh sách sản phẩm bán hàng (dữ liệu giả)
 final salesProductsProvider = FutureProvider<List<Product>>((ref) async {
   await Future.delayed(const Duration(milliseconds: 300));
   return mockSalesProducts;
 }, name: 'salesProductsProvider');
 
-// Provider để lọc danh sách sản phẩm bán hàng dựa trên chuỗi tìm kiếm
 final filteredSalesProductsProvider = Provider<List<Product>>((ref) {
   final query = ref.watch(salesSearchQueryProvider);
   final productsAsyncValue = ref.watch(salesProductsProvider);
@@ -59,6 +66,7 @@ final filteredSalesProductsProvider = Provider<List<Product>>((ref) {
   );
 }, name: 'filteredSalesProductsProvider');
 
+<<<<<<< HEAD
 // --- Notifier để quản lý danh sách khách hàng ---
 class CustomersNotifier extends StateNotifier<List<Customer>> {
   CustomersNotifier() : super(mockCustomers);
@@ -93,17 +101,81 @@ class QuoteNotifier extends StateNotifier<Quote> {
       customer: initialCustomer,
       priceList: initialPriceList,
     );
+=======
+// --- In-Progress Quotes Management ---
+
+final quoteLocalStorageServiceProvider = Provider((ref) => QuoteLocalStorageService());
+
+final inProgressQuotesProvider = StateNotifierProvider<InProgressQuotesNotifier, List<Quote>>((ref) {
+  return InProgressQuotesNotifier(ref);
+});
+
+class InProgressQuotesNotifier extends StateNotifier<List<Quote>> {
+  InProgressQuotesNotifier(this.ref) : super([]) {
+    _loadQuotes();
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
   }
 
   final Ref ref;
 
-  // Thêm một sản phẩm vào báo giá
+  Future<void> _loadQuotes() async {
+    final quotes = await ref.read(quoteLocalStorageServiceProvider).loadQuotes();
+    if (quotes.isEmpty) {
+      _createNewQuote();
+    } else {
+      state = quotes;
+    }
+  }
+
+  void _saveQuotes() {
+    ref.read(quoteLocalStorageServiceProvider).saveQuotes(state);
+  }
+
+  void _createNewQuote() {
+    final newQuote = Quote(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      items: [],
+      createdAt: DateTime.now(),
+    );
+    state = [...state, newQuote];
+    ref.read(activeQuoteIndexProvider.notifier).state = state.length - 1;
+    _saveQuotes();
+  }
+
+  void addQuote() {
+    _createNewQuote();
+  }
+
+  void removeQuote(int index) {
+    if (state.length > 1) {
+      state = [
+        for (int i = 0; i < state.length; i++)
+          if (i != index) state[i],
+      ];
+      final activeIndex = ref.read(activeQuoteIndexProvider);
+      if (activeIndex >= index) {
+        ref.read(activeQuoteIndexProvider.notifier).state = (activeIndex - 1).clamp(0, state.length - 1);
+      }
+      _saveQuotes();
+    }
+  }
+
+  void _updateQuote(int index, Quote quote) {
+    final quotes = List<Quote>.from(state);
+    quotes[index] = quote;
+    state = quotes;
+    _saveQuotes();
+  }
+
   void addItem({
     required Product product,
     PaintColor? color,
     int quantity = 1,
   }) {
-    final existingItem = state.items.firstWhereOrNull(
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+
+    final existingItem = activeQuote.items.firstWhereOrNull(
       (item) => item.product.id == product.id && item.color?.id == color?.id,
     );
 
@@ -129,16 +201,23 @@ class QuoteNotifier extends StateNotifier<Quote> {
         tintingCost: tintingCost,
         note: color != null ? '${color.code} ${color.name}' : null,
       );
-      state = state.copyWith(items: [...state.items, newItem]);
+      final updatedQuote = activeQuote.copyWith(items: [...activeQuote.items, newItem]);
+      _updateQuote(activeIndex, updatedQuote);
     }
   }
 
-  // Thêm một danh sách các mục chi phí (từ dialog chi tiết giá) vào báo giá
   void addCostItems(List<CostItem> costItems, PaintColor color) {
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+
     final newQuoteItems = costItems.map((costItem) {
+<<<<<<< HEAD
       // Tính toán đơn giá cuối cùng theo yêu cầu
       final finalUnitPrice =
           costItem.unitPrice + costItem.tintCost - costItem.discount;
+=======
+      final finalUnitPrice = costItem.unitPrice + costItem.tintCost - costItem.discount;
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
 
       return QuoteItem(
         id:
@@ -147,9 +226,7 @@ class QuoteNotifier extends StateNotifier<Quote> {
         product: costItem.product,
         color: color,
         quantity: costItem.quantity,
-        // Đưa đơn giá cuối cùng vào trường unitPrice
         unitPrice: finalUnitPrice,
-        // Đặt tintingCost và discountValue thành 0 để tránh tính trùng lặp
         tintingCost: 0,
         discountValue: 0,
         isDiscountPercentage: false,
@@ -157,17 +234,21 @@ class QuoteNotifier extends StateNotifier<Quote> {
       );
     }).toList();
 
-    state = state.copyWith(items: [...state.items, ...newQuoteItems]);
+    final updatedQuote = activeQuote.copyWith(items: [...activeQuote.items, ...newQuoteItems]);
+    _updateQuote(activeIndex, updatedQuote);
   }
 
-  // Thêm một bản sao của một mục trong báo giá
   void addDuplicateItem(QuoteItem item) {
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
     final newItem = item.copyWith(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
     );
-    state = state.copyWith(items: [...state.items, newItem]);
+    final updatedQuote = activeQuote.copyWith(items: [...activeQuote.items, newItem]);
+    _updateQuote(activeIndex, updatedQuote);
   }
 
+<<<<<<< HEAD
   // Phương thức private helper để cập nhật một mục trong danh sách
   void _updateItem(String quoteItemId, QuoteItem Function(QuoteItem) updater) {
     state = state.copyWith(
@@ -186,23 +267,53 @@ class QuoteNotifier extends StateNotifier<Quote> {
       _updateItem(quoteItemId, (item) => item.copyWith(quantity: newQuantity));
     } else {
       removeItem(quoteItemId);
+=======
+  void updateQuantity(String quoteItemId, int newQuantity) {
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+    final items = List<QuoteItem>.from(activeQuote.items);
+    final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
+
+    if (itemIndex != -1) {
+      if (newQuantity > 0) {
+        items[itemIndex] = items[itemIndex].copyWith(quantity: newQuantity);
+        final updatedQuote = activeQuote.copyWith(items: items);
+        _updateQuote(activeIndex, updatedQuote);
+      } else {
+        removeItem(quoteItemId);
+      }
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
     }
   }
 
-  // Xóa một mục khỏi báo giá
   void removeItem(String quoteItemId) {
-    state = state.copyWith(
-      items: state.items.where((item) => item.id != quoteItemId).toList(),
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+    final updatedQuote = activeQuote.copyWith(
+      items: activeQuote.items.where((item) => item.id != quoteItemId).toList(),
     );
+    _updateQuote(activeIndex, updatedQuote);
   }
 
-  // Cập nhật đơn giá của một mục trong báo giá
   void updateUnitPrice(String quoteItemId, double newUnitPrice) {
+<<<<<<< HEAD
     _updateItem(quoteItemId, (item) => item.copyWith(unitPrice: newUnitPrice));
+=======
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+    final items = List<QuoteItem>.from(activeQuote.items);
+    final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
+
+    if (itemIndex != -1) {
+      items[itemIndex] = items[itemIndex].copyWith(unitPrice: newUnitPrice);
+      final updatedQuote = activeQuote.copyWith(items: items);
+      _updateQuote(activeIndex, updatedQuote);
+    }
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
   }
 
-  // Áp dụng giảm giá cho một mục trong báo giá
   void applyDiscount(String quoteItemId, double value, bool isPercentage) {
+<<<<<<< HEAD
     _updateItem(
       quoteItemId,
       (item) => item.copyWith(
@@ -210,10 +321,25 @@ class QuoteNotifier extends StateNotifier<Quote> {
         isDiscountPercentage: isPercentage,
       ),
     );
+=======
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+    final items = List<QuoteItem>.from(activeQuote.items);
+    final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
+
+    if (itemIndex != -1) {
+      items[itemIndex] = items[itemIndex].copyWith(
+        discountValue: value,
+        isDiscountPercentage: isPercentage,
+      );
+      final updatedQuote = activeQuote.copyWith(items: items);
+      _updateQuote(activeIndex, updatedQuote);
+    }
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
   }
 
-  // Cập nhật ghi chú cho một mục trong báo giá
   void updateNote(String quoteItemId, String note) {
+<<<<<<< HEAD
     _updateItem(quoteItemId, (item) => item.copyWith(note: note));
   }
 
@@ -261,16 +387,37 @@ class QuoteNotifier extends StateNotifier<Quote> {
         unitPrice: newPrice ?? item.unitPrice,
         tintingCost: newTintingCost ?? item.tintingCost,
       );
-    }).toList();
-    state = state.copyWith(items: updatedItems);
+=======
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+    final items = List<QuoteItem>.from(activeQuote.items);
+    final itemIndex = items.indexWhere((item) => item.id == quoteItemId);
+
+    if (itemIndex != -1) {
+      items[itemIndex] = items[itemIndex].copyWith(note: note);
+      final updatedQuote = activeQuote.copyWith(items: items);
+      _updateQuote(activeIndex, updatedQuote);
+    }
   }
 
-  // Tính toán đơn giá dựa trên bảng giá
+  void updateAllPrices() {
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+    final newPriceList = ref.read(selectedPriceListProvider);
+    final updatedItems = activeQuote.items.map((item) {
+      final newPrice = _calculateUnitPrice(product: item.product, priceList: newPriceList);
+      final newTintingCost = item.color != null ? _calculateTintingCost(item.product, item.color!) : 0.0;
+      return item.copyWith(unitPrice: newPrice ?? item.unitPrice, tintingCost: newTintingCost ?? item.tintingCost);
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
+    }).toList();
+    final updatedQuote = activeQuote.copyWith(items: updatedItems);
+    _updateQuote(activeIndex, updatedQuote);
+  }
+
   double? _calculateUnitPrice({required Product product, String? priceList}) {
     return product.prices[priceList] ?? product.basePrice;
   }
 
-  // Tính toán chi phí pha màu
   double? _calculateTintingCost(Product product, PaintColor color) {
     final priceService = ref.read(priceServiceProvider);
     final finalPrice = priceService.getFinalPrice(color, product);
@@ -280,40 +427,74 @@ class QuoteNotifier extends StateNotifier<Quote> {
     return finalPrice - product.basePrice;
   }
 
-  // Xóa tất cả các mục trong báo giá
   void clear() {
-    state = state.copyWith(items: [], customer: null);
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+    final updatedQuote = activeQuote.copyWith(items: [], customer: null);
+    _updateQuote(activeIndex, updatedQuote);
   }
 
-  // Sắp xếp lại thứ tự các mục trong báo giá
   void reorderItem(int oldIndex, int newIndex) {
-    final items = List<QuoteItem>.from(state.items);
+    final activeIndex = ref.read(activeQuoteIndexProvider);
+    final activeQuote = state[activeIndex];
+    final items = List<QuoteItem>.from(activeQuote.items);
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
     final item = items.removeAt(oldIndex);
     items.insert(newIndex, item);
-    state = state.copyWith(items: items);
+    final updatedQuote = activeQuote.copyWith(items: items);
+    _updateQuote(activeIndex, updatedQuote);
   }
 }
 
+<<<<<<< HEAD
 // Provider chính cho báo giá
 final quoteProvider = StateNotifierProvider<QuoteNotifier, Quote>((ref) {
   return QuoteNotifier(ref);
+=======
+final activeQuoteIndexProvider = StateProvider<int>((ref) => 0, name: 'activeQuoteIndexProvider');
+
+final quoteProvider = Provider<Quote>((ref) {
+  final quotes = ref.watch(inProgressQuotesProvider);
+  final activeIndex = ref.watch(activeQuoteIndexProvider);
+  if (quotes.isEmpty || activeIndex >= quotes.length) {
+    // Return a default/empty quote to avoid crashing
+    return Quote(id: 'default', items: [], createdAt: DateTime.now());
+  }
+  return quotes[activeIndex];
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
 }, name: 'quoteProvider');
 
-// Provider để tính tổng tiền của báo giá
+
 final quoteTotalProvider = Provider<double>((ref) {
   final quoteItems = ref.watch(quoteProvider).items;
   if (quoteItems.isEmpty) return 0.0;
   return quoteItems.fold(0.0, (sum, item) => sum + item.totalPrice);
 }, name: 'quoteTotalProvider');
 
+<<<<<<< HEAD
 // Provider cho danh sách các bảng giá
+=======
+final customersProvider = Provider<List<Customer>>((ref) {
+  return [
+    Customer(id: '1', name: 'Khách lẻ', phone: '', address: ''),
+    Customer(id: '2', name: 'Anh Sơn - Cầu Giấy', phone: '', address: ''),
+    Customer(id: '3', name: 'Công ty Xây dựng ABC', phone: '', address: ''),
+  ];
+}, name: 'customersProvider');
+
+final selectedCustomerProvider = StateProvider<Customer?>((ref) {
+    final activeQuote = ref.watch(quoteProvider);
+  return activeQuote.customer ?? ref.watch(customersProvider).first;
+}, name: 'selectedCustomerProvider');
+
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
 final priceListsProvider = Provider<List<String>>((ref) {
   return ['Giá bán lẻ', 'Giá đại lý cấp 1', 'Giá dự án'];
 }, name: 'priceListsProvider');
 
+<<<<<<< HEAD
 // --- Các provider suy ra từ `quoteProvider` ---
 
 // Provider cho khách hàng đã chọn, lấy từ báo giá hiện tại
@@ -327,3 +508,8 @@ final selectedPriceListProvider = Provider<String?>(
   (ref) => ref.watch(quoteProvider).priceList,
   name: 'selectedPriceListProvider',
 );
+=======
+final selectedPriceListProvider = StateProvider<String?>((ref) {
+  return ref.watch(priceListsProvider).first;
+}, name: 'selectedPriceListProvider');
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+<<<<<<< HEAD
 
 import 'customer_selector.dart';
 import 'price_list_selector.dart';
+=======
+import 'package:flutter_paint_store_app/features/sales/presentation/widgets/customer_selector.dart';
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
 
 class SalesHeader extends ConsumerWidget {
   const SalesHeader({super.key});
@@ -19,11 +23,15 @@ class SalesHeader extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+<<<<<<< HEAD
             Expanded(
               child: CustomerSelector(),
             ),
             SizedBox(width: 8),
             PriceListSelector(),
+=======
+            Expanded(child: CustomerSelector()),
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
           ],
         ),
       );
@@ -34,8 +42,6 @@ class SalesHeader extends ConsumerWidget {
         child: Row(
           children: [
             Expanded(child: CustomerSelector()),
-            SizedBox(width: 8),
-            Expanded(child: PriceListSelector()),
           ],
         ),
       );

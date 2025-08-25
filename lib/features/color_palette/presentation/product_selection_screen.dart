@@ -423,7 +423,7 @@ class _CostSummaryCard extends ConsumerWidget {
     if (costDetails.items.isEmpty) {
       return const Card(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Text('Vui lòng chọn số lượng.'),
         ),
       );
@@ -515,7 +515,7 @@ class _ActionButtons extends ConsumerWidget {
                   );
 
                   if (result != null && result.isNotEmpty) {
-                    ref.read(quoteProvider.notifier).addCostItems(result, color);
+                    ref.read(inProgressQuotesProvider.notifier).addCostItems(result, color);
                     Navigator.of(context).pop();
                   }
                 }

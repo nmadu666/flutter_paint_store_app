@@ -53,6 +53,7 @@ class Customer {
     this.psidFacebook,
   });
 
+<<<<<<< HEAD
   // Factory constructor for deserialization from JSON
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
@@ -230,3 +231,23 @@ class Customer {
         psidFacebook.hashCode;
   }
 }
+=======
+  factory Customer.fromJson(Map<String, dynamic> json) {
+    return Customer(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      phone: json['phone'] as String,
+      address: json['address'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'phone': phone,
+      'address': address,
+    };
+  }
+}
+>>>>>>> a3fe1cbbfd56cfdfbd25881eb5ca94056ca22fcc
