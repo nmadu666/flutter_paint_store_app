@@ -85,10 +85,10 @@ class QuotePdfService {
           'Kính gửi: ${customer?.name ?? 'Khách lẻ'}',
           style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
         ),
-        if (customer?.address.isNotEmpty ?? false)
-          pw.Text('Địa chỉ: ${customer!.address}'),
-        if (customer?.phone.isNotEmpty ?? false)
-          pw.Text('Điện thoại: ${customer!.phone}'),
+        if (customer!.address!.isNotEmpty)
+          pw.Text('Địa chỉ: ${customer.address}'),
+        if (customer?.contactNumber!.isNotEmpty ?? false)
+          pw.Text('Điện thoại: ${customer.contactNumber}'),
       ],
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/paint_color.dart';
+import '../models/customer.dart';
 import '../models/paint_color_price.dart';
 import '../models/parent_product.dart';
 import '../models/product.dart';
@@ -497,4 +498,107 @@ final List<Product> mockSalesProducts = [
 
   // Standalone products (no tinting)
   ...mockStandaloneProducts,
+];
+
+/// Mock list of customers.
+final List<Customer> mockCustomers = [
+  Customer(
+    id: 1, // Changed to int
+    code: 'KH001',
+    name: 'Khách lẻ',
+    gender: null,
+    birthDate: null,
+    contactNumber: null,
+    address: null,
+    locationName: null,
+    wardName: null,
+    email: null,
+    organization: null,
+    comments: 'Khách hàng không có thông tin cụ thể',
+    taxCode: null,
+    retailerId: 1,
+    debt: 0.0,
+    totalInvoiced: 0.0,
+    totalPoint: 0.0,
+    totalRevenue: 0.0,
+    modifiedDate: null, // Can be null for initial mock
+    createdDate: DateTime(2023, 1, 1), // Required
+    groups: [],
+    psidFacebook: null,
+  ),
+  Customer(
+    id: 2,
+    code: 'KH002',
+    name: 'Anh Sơn - Cầu Giấy',
+    gender: true, // Nam
+    birthDate: DateTime(1985, 5, 10),
+    contactNumber: '0912345678',
+    address: '123 Đường Cầu Giấy, Quận Cầu Giấy, Hà Nội',
+    locationName: 'Hà Nội',
+    wardName: 'Cầu Giấy',
+    email: 'son.cg@example.com',
+    organization: 'Công ty TNHH Sơn Việt',
+    comments: 'Khách hàng thân thiết, mua hàng thường xuyên.',
+    taxCode: '0101234567',
+    retailerId: 1,
+    debt: 500000.0,
+    totalInvoiced: 15000000.0,
+    totalPoint: 150.5,
+    totalRevenue: 15000000.0,
+    modifiedDate: DateTime.now(),
+    createdDate: DateTime(2022, 1, 15),
+    groups: ['Khách VIP', 'Khách dự án'],
+    rewardPoint: 1500,
+    psidFacebook: '12345678901234567',
+  ),
+  Customer(
+    id: 3,
+    code: 'KH003',
+    name: 'Công ty Xây dựng ABC',
+    gender: null, // Không xác định
+    birthDate: null,
+    contactNumber: '02439998888',
+    address: 'Tầng 10, Tòa nhà ABC, Khuất Duy Tiến, Thanh Xuân, Hà Nội',
+    locationName: 'Hà Nội',
+    wardName: 'Thanh Xuân',
+    email: 'info@abc.com',
+    organization: 'Công ty Xây dựng ABC',
+    comments: 'Đối tác lớn, cần chiết khấu đặc biệt.',
+    taxCode: '0109876543',
+    retailerId: 1,
+    debt: 0.0,
+    totalInvoiced: 50000000.0,
+    totalPoint: 500.0,
+    totalRevenue: 50000000.0,
+    modifiedDate: DateTime.now(),
+    createdDate: DateTime(2021, 10, 1),
+    groups: ['Khách dự án', 'Đối tác chiến lược'],
+    rewardPoint: 5000,
+    psidFacebook: '76543210987654321',
+  ),
+  Customer(
+    id: 4,
+    code: 'KH004',
+    name: 'Chị Lan - Hoàng Mai',
+    gender: false, // Nữ
+    birthDate: DateTime(1990, 11, 22),
+    contactNumber: '0987654321',
+    address: 'Ngõ 100, Đường Giải Phóng, Quận Hoàng Mai, Hà Nội',
+    locationName: 'Hà Nội',
+    wardName: 'Hoàng Mai',
+    email: 'lan.hm@example.com',
+    organization: null,
+    comments: 'Thích màu pastel, cần tư vấn kỹ.',
+    taxCode: null,
+    retailerId: 1,
+    debt: 0.0,
+    totalInvoiced: 2500000.0,
+    totalPoint: 25.0,
+    totalRevenue: 2500000.0,
+    modifiedDate: DateTime.now(),
+    createdDate: DateTime(2023, 3, 8),
+    groups: ['Khách lẻ'],
+    rewardPoint: 250,
+    psidFacebook: null,
+  ),
 ];

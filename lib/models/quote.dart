@@ -9,25 +9,39 @@ class Quote {
   final List<QuoteItem> items;
   final Customer? customer;
   final DateTime createdAt;
+  final String? priceList;
 
   const Quote({
     required this.id,
     required this.items,
     this.customer,
     required this.createdAt,
+    this.priceList,
   });
+
+  factory Quote.initial() {
+    return  Quote(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      items: [],
+      createdAt: DateTime.now(),
+      customer: null,
+      priceList: null,
+    );
+  }
 
   Quote copyWith({
     String? id,
     List<QuoteItem>? items,
     Customer? customer,
     DateTime? createdAt,
+    String? priceList,
   }) {
     return Quote(
       id: id ?? this.id,
       items: items ?? this.items,
       customer: customer ?? this.customer,
       createdAt: createdAt ?? this.createdAt,
+      priceList: priceList ?? this.priceList,
     );
   }
 }
@@ -79,6 +93,7 @@ class QuoteItem {
     String? note,
     double? discountValue,
     bool? isDiscountPercentage,
+    
   }) {
     return QuoteItem(
       id: id ?? this.id,
