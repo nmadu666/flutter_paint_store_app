@@ -78,7 +78,7 @@ Future<void> showEditItemDialog(
               FilledButton(
                 child: const Text('Lưu'),
                 onPressed: () {
-                  final notifier = ref.read(quoteProvider.notifier);
+                  final notifier = ref.read(inProgressQuotesProvider.notifier);
                   final newQuantity = int.tryParse(quantityController.text) ?? item.quantity;
                   final newPrice = double.tryParse(priceController.text) ?? item.unitPrice;
                   final newDiscount = double.tryParse(discountController.text) ?? item.discountValue;

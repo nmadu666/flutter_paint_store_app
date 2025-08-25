@@ -61,7 +61,7 @@ class _MobileCartItemState extends ConsumerState<MobileCartItem>
                       icon: Icons.copy_outlined,
                       label: 'Nhân bản',
                       onPressed: () {
-                        ref.read(quoteProvider.notifier).addDuplicateItem(item);
+                        ref.read(inProgressQuotesProvider.notifier).addDuplicateItem(item);
                         _controller.reverse();
                       },
                     ),
@@ -83,7 +83,7 @@ class _MobileCartItemState extends ConsumerState<MobileCartItem>
                       icon: Icons.delete_outline,
                       label: 'Xóa',
                       onPressed: () {
-                        ref.read(quoteProvider.notifier).removeItem(item.id);
+                        ref.read(inProgressQuotesProvider.notifier).removeItem(item.id);
                         _controller.reverse();
                       },
                     ),

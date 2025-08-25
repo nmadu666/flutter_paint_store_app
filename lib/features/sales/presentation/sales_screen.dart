@@ -8,6 +8,7 @@ import 'package:flutter_paint_store_app/features/sales/presentation/widgets/cart
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/cart/mobile_cart_item.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/price_formatter.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/sales_header.dart';
+import 'package:flutter_paint_store_app/models/product.dart';
 
 class SalesScreen extends ConsumerWidget {
   const SalesScreen({super.key});
@@ -78,51 +79,177 @@ class SalesScreen extends ConsumerWidget {
   }
 
   Widget _buildDesktopLayout(BuildContext context, WidgetRef ref) {
-    final quote = ref.watch(quoteProvider);
+    final quotes = ref.watch(inProgressQuotesProvider);
+    final activeIndex = ref.watch(activeQuoteIndexProvider);
 
-    return Scaffold(
-      appBar: const SalesAppBar(isMobile: false),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 2,
-            child: ReorderableDesktopCartTable(
-              items: quote.items,
-              onReorder: (oldIndex, newIndex) {
-                ref
-                    .read(quoteProvider.notifier)
-                    .reorderItem(oldIndex, newIndex);
-              },
-            ),
+    return DefaultTabController(
+      length: quotes.length + 1,
+      initialIndex: activeIndex,
+      child: Scaffold(
+        appBar: SalesAppBar(
+          isMobile: false,
+          bottom: TabBar(
+            isScrollable: true,
+            tabs: [
+              ...quotes.map((quote) => Tab(text: 'Báo giá ${quotes.indexOf(quote) + 1}')),
+              const Tab(
+                child: Icon(Icons.add),
+              ),
+            ],
+            onTap: (index) {
+              if (index < quotes.length) {
+                ref.read(activeQuoteIndexProvider.notifier).state = index;
+              } else {
+                ref.read(inProgressQuotesProvider.notifier).addQuote();
+              }
+            },
           ),
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
+        ),
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 2,
               child: Column(
                 children: [
-                  const SalesHeader(),
+                  const _DesktopSearchBar(),
                   Expanded(
-                    child: PaymentSummary(
-                        onPrint: () => _handlePrintQuote(context, ref)),
+                    child: ReorderableDesktopCartTable(
+                      items: quotes[activeIndex].items,
+                      onReorder: (oldIndex, newIndex) {
+                        ref
+                            .read(inProgressQuotesProvider.notifier)
+                            .reorderItem(oldIndex, newIndex);
+                      },
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              flex: 1,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    const SalesHeader(),
+                    Expanded(
+                      child: PaymentSummary(
+                          onPrint: () => _handlePrintQuote(context, ref)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class MobileCartView extends StatelessWidget {
+class _DesktopSearchBar extends ConsumerWidget {
+  const _DesktopSearchBar();
+
+  void _showAddedToCartSnackbar(BuildContext context, Product product) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${product.name} đã được thêm vào báo giá.'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final allProductsAsync = ref.watch(salesProductsProvider);
+    final selectedPriceList = ref.watch(selectedPriceListProvider);
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: allProductsAsync.when(
+        data: (allProducts) => Autocomplete<Product>(
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text.isEmpty) {
+              return const Iterable<Product>.empty();
+            }
+            return allProducts.where((product) {
+              return product.name
+                  .toLowerCase()
+                  .contains(textEditingValue.text.toLowerCase());
+            });
+          },
+          displayStringForOption: (Product option) => '',
+          onSelected: (Product selection) {
+            ref.read(inProgressQuotesProvider.notifier).addItem(product: selection);
+            _showAddedToCartSnackbar(context, selection);
+          },
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 4.0,
+                child: SizedBox(
+                  height: 250,
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: options.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final Product option = options.elementAt(index);
+                      final displayPrice =
+                          option.prices[selectedPriceList] ?? option.basePrice;
+
+                      return ListTile(
+                        title: Text(option.name),
+                        subtitle: Text(
+                          'Code: ${option.code} - Giá: ${formatPrice(displayPrice)}',
+                        ),
+                        onTap: () => onSelected(option),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+          fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+            return TextField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                hintText: 'Tìm và thêm sản phẩm...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ),
+              ),
+              onSubmitted: (_) {
+                controller.clear();
+              },
+            );
+          },
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => const TextField(
+          decoration: InputDecoration(hintText: 'Lỗi tải sản phẩm'),
+          enabled: false,
+        ),
+      ),
+    );
+  }
+}
+
+class MobileCartView extends ConsumerWidget {
   final VoidCallback onPrint;
   const MobileCartView({super.key, required this.onPrint});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Consumer(
       builder: (context, ref, child) {
         final quoteItems = ref.watch(quoteProvider).items;
@@ -143,7 +270,7 @@ class MobileCartView extends StatelessWidget {
                   return MobileCartItem(key: ValueKey(item.id), item: item);
                 },
                 onReorder: (oldIndex, newIndex) {
-                  ref.read(quoteProvider.notifier).reorderItem(oldIndex, newIndex);
+                  ref.read(inProgressQuotesProvider.notifier).reorderItem(oldIndex, newIndex);
                 },
               ),
             ),

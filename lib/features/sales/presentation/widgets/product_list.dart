@@ -71,7 +71,7 @@ class ProductCounter extends ConsumerWidget {
         icon: const Icon(Icons.add_shopping_cart_outlined),
         tooltip: 'Thêm vào giỏ',
         onPressed: () {
-          ref.read(quoteProvider.notifier).addItem(product: product);
+          ref.read(inProgressQuotesProvider.notifier).addItem(product: product);
           _showAddedToCartSnackbar(context, product);
         },
       );
@@ -90,7 +90,7 @@ class ProductCounter extends ConsumerWidget {
           icon: const Icon(Icons.remove_circle_outline),
           tooltip: 'Bớt',
           onPressed: () => ref
-              .read(quoteProvider.notifier)
+              .read(inProgressQuotesProvider.notifier)
               .updateQuantity(item.id, item.quantity - 1),
         ),
         Text(
@@ -101,7 +101,7 @@ class ProductCounter extends ConsumerWidget {
           icon: const Icon(Icons.add_circle_outline),
           tooltip: 'Thêm',
           onPressed: () => ref
-              .read(quoteProvider.notifier)
+              .read(inProgressQuotesProvider.notifier)
               .updateQuantity(item.id, item.quantity + 1),
         ),
       ],
