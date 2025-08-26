@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_paint_store_app/features/color_palette/presentation/color_palette_screen.dart';
 import 'package:flutter_paint_store_app/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:flutter_paint_store_app/features/other/presentation/other_screen.dart';
-import 'package:flutter_paint_store_app/features/quotes/presentation/quotes_screen.dart';
+import 'package:flutter_paint_store_app/features/orders/presentation/orders_screen.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/sales_screen.dart';
 
 class ResponsiveShell extends StatefulWidget {
@@ -20,7 +20,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
     const DashboardScreen(),
     const ColorPaletteScreen(),
     const SalesScreen(),
-    const QuotesScreen(),
+    const OrdersScreen(),
     const OtherScreen(),
   ];
 
@@ -43,7 +43,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
     NavigationRailDestination(
       icon: Icon(Icons.request_quote_outlined),
       selectedIcon: Icon(Icons.request_quote),
-      label: Text('Báo giá'),
+      label: Text('Đặt hàng'),
     ),
     NavigationRailDestination(
       icon: Icon(Icons.admin_panel_settings_outlined),
@@ -71,7 +71,7 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
     NavigationRailDestination(
       icon: Icon(Icons.request_quote_outlined),
       selectedIcon: Icon(Icons.request_quote),
-      label: Text('Báo giá'),
+      label: Text('Đặt hàng'),
     ),
     NavigationRailDestination(
       icon: Icon(Icons.more_horiz_outlined),

@@ -2,15 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_paint_store_app/models/customer.dart';
-import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
+import 'package:flutter_paint_store_app/features/sales/application/customer_providers.dart';
+import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
 
 class CustomerDialog extends ConsumerStatefulWidget {
   final Customer? customer;
 
-  const CustomerDialog({
-    super.key,
-    this.customer,
-  });
+  const CustomerDialog({super.key, this.customer});
 
   @override
   ConsumerState<CustomerDialog> createState() => _CustomerDialogState();
@@ -27,12 +25,33 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
   late TextEditingController _birthdayController;
   late TextEditingController _emailController;
   late TextEditingController _facebookController;
+  late TextEditingController _addressController;
+  late TextEditingController _notesController;
+  late TextEditingController _newGroupController;
   // ... add controllers for other fields as needed
 
   // State variables
   DateTime? _selectedDate;
   String? _selectedGender;
   bool _isSupplier = false;
+  final List<String> _selectedGroups = [];
+  String _billingType = 'Cá nhân';
+
+  // Billing Info Controllers
+  // Common
+  late TextEditingController _billingBuyerNameController;
+  late TextEditingController _billingAddressController;
+  late TextEditingController _billingEmailController;
+  late TextEditingController _billingPhoneController;
+  late TextEditingController _billingBankNameController;
+  late TextEditingController _billingBankAccountController;
+  // Individual-specific
+  late TextEditingController _billingIdCardController; // CCCD
+  late TextEditingController _billingPassportController;
+  // Organization-specific
+  late TextEditingController _billingTaxCodeController;
+  late TextEditingController _billingCompanyNameController;
+  late TextEditingController _billingStateBudgetCodeController; // Mã ĐVQHNS
 
   @override
   void initState() {
@@ -40,17 +59,55 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
     final customer = widget.customer;
     _nameController = TextEditingController(text: customer?.name ?? '');
     _codeController = TextEditingController(text: customer?.code ?? '');
-    _phone1Controller =
-    _phone2Controller = TextEditingController(); // Assuming no second phone in model
+    _phone1Controller = TextEditingController(
+      text: customer?.contactNumber ?? '',
+    );
+    _phone2Controller =
+        TextEditingController(); // Assuming no second phone in model
     _emailController = TextEditingController(text: customer?.email ?? '');
-    _facebookController =
-        TextEditingController(text: customer?.psidFacebook ?? '');
+    _facebookController = TextEditingController(
+      text: customer?.psidFacebook ?? '',
+    );
+    _addressController = TextEditingController(text: customer?.address ?? '');
+    _newGroupController = TextEditingController();
+    _notesController = TextEditingController(
+      text: customer?.comments ?? '',
+    ); // 'comments' for KiotViet API
+
+    // Initialize billing type and controllers
+    // NOTE: Assuming 'customer' has these billing fields.
+    // Please update your Customer model accordingly.
+    _billingType = (customer?.organization ?? '').isEmpty ? 'Cá nhân' : 'Tổ chức';
+    _billingBuyerNameController =
+        TextEditingController(text: '');
+    _billingAddressController =
+        TextEditingController(text:  '');
+    _billingEmailController = TextEditingController(text: '');
+    _billingPhoneController = TextEditingController(text: '');
+    _billingBankNameController =
+        TextEditingController(text: '');
+    _billingBankAccountController =
+        TextEditingController(text: '');
+    _billingIdCardController = TextEditingController(text: '');
+    _billingPassportController =
+        TextEditingController(text: '');
+    _billingTaxCodeController =
+        TextEditingController(text: '');
+    _billingCompanyNameController =
+        TextEditingController(text: '');
+    _billingStateBudgetCodeController =
+        TextEditingController(text: '');
 
     _selectedDate = customer?.birthDate;
     _birthdayController = TextEditingController(
-        text: _selectedDate != null
-            ? DateFormat('dd/MM/yyyy').format(_selectedDate!)
-            : '');
+      text: _selectedDate != null
+          ? DateFormat('dd/MM/yyyy').format(_selectedDate!)
+          : '',
+    );
+
+    if (customer?.groups != null) {
+      _selectedGroups.addAll(customer!.groups!);
+    }
 
     if (customer?.gender != null) {
       _selectedGender = customer!.gender! ? 'Nam' : 'Nữ';
@@ -66,6 +123,22 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
     _birthdayController.dispose();
     _emailController.dispose();
     _facebookController.dispose();
+    _addressController.dispose();
+    _notesController.dispose();
+    _newGroupController.dispose();
+
+    // Dispose billing controllers
+    _billingBuyerNameController.dispose();
+    _billingAddressController.dispose();
+    _billingEmailController.dispose();
+    _billingPhoneController.dispose();
+    _billingBankNameController.dispose();
+    _billingBankAccountController.dispose();
+    _billingIdCardController.dispose();
+    _billingPassportController.dispose();
+    _billingTaxCodeController.dispose();
+    _billingCompanyNameController.dispose();
+    _billingStateBudgetCodeController.dispose();
     super.dispose();
   }
 
@@ -82,13 +155,17 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
           gender: _selectedGender == 'Nam'
               ? true
               : _selectedGender == 'Nữ'
-                  ? false
-                  : null,
+              ? false
+              : null,
           email: _emailController.text,
           psidFacebook: _facebookController.text,
+          address: _addressController.text,
+          groups: _selectedGroups,
+          comments: _notesController.text,
           modifiedDate: DateTime.now(),
         );
-        ref.read(quoteProvider.notifier).updateCustomer(updatedCustomer);
+        ref.read(customersProvider.notifier).updateCustomer(updatedCustomer);
+        ref.read(quoteTabsProvider.notifier).updateCustomerForActiveQuote(updatedCustomer);
       } else {
         final newCustomer = Customer(
           id: DateTime.now().millisecondsSinceEpoch,
@@ -100,12 +177,16 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
           gender: _selectedGender == 'Nam'
               ? true
               : _selectedGender == 'Nữ'
-                  ? false
-                  : null,
+              ? false
+              : null,
           email: _emailController.text,
           psidFacebook: _facebookController.text,
+          address: _addressController.text,
+          groups: _selectedGroups,
+          comments: _notesController.text,
         );
-        ref.read(quoteProvider.notifier).addCustomerAndSelect(newCustomer);
+        ref.read(customersProvider.notifier).addCustomer(newCustomer);
+        ref.read(quoteTabsProvider.notifier).updateCustomerForActiveQuote(newCustomer);
       }
       Navigator.of(context).pop();
     }
@@ -123,7 +204,7 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.of(context).pop(),
-          )
+          ),
         ],
       ),
       content: SizedBox(
@@ -147,10 +228,7 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Bỏ qua'),
         ),
-        FilledButton(
-          onPressed: _handleSave,
-          child: const Text('Lưu'),
-        ),
+        FilledButton(onPressed: _handleSave, child: const Text('Lưu')),
       ],
     );
   }
@@ -178,6 +256,45 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
           _buildEmailField(),
           const SizedBox(height: 16),
           _buildFacebookField(),
+          const SizedBox(height: 16),
+          // Expansion sections for consistency with wide layout
+          ExpansionTile(
+            title: const Text('Địa chỉ'),
+            initiallyExpanded: widget.customer?.address?.isNotEmpty ?? false,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: _buildAddressField(),
+              ),
+            ],
+          ),
+          ExpansionTile(
+            title: const Text('Nhóm khách hàng, ghi chú'),
+            initiallyExpanded:
+                (widget.customer?.groups?.isNotEmpty ?? false) ||
+                (widget.customer?.comments?.isNotEmpty ?? false),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: [
+                    _buildGroupField(),
+                    const SizedBox(height: 16),
+                    _buildNotesField(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          ExpansionTile(
+            title: const Text('Thông tin xuất hóa đơn'),
+            children: [_buildBillingInfoSection()],
+          ),
+          SwitchListTile(
+            title: const Text('Khách hàng là nhà cung cấp'),
+            value: _isSupplier,
+            onChanged: (value) => setState(() => _isSupplier = value),
+          ),
         ],
       ),
     );
@@ -233,34 +350,42 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
               ),
               const SizedBox(width: 24),
               // Right column for image uploader
-              Expanded(
-                flex: 1,
-                child: _buildImageUploader(),
-              ),
+              Expanded(flex: 1, child: _buildImageUploader()),
             ],
           ),
           const SizedBox(height: 16),
           // Expansion sections
           ExpansionTile(
+            initiallyExpanded: widget.customer?.address?.isNotEmpty ?? false,
             title: const Text('Địa chỉ'),
             children: [
-              // Add address fields here
-              const ListTile(title: Text('Chi tiết địa chỉ...'))
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: _buildAddressField(),
+              ),
             ],
           ),
           ExpansionTile(
             title: const Text('Nhóm khách hàng, ghi chú'),
+            initiallyExpanded:
+                (widget.customer?.groups?.isNotEmpty ?? false) ||
+                (widget.customer?.comments?.isNotEmpty ?? false),
             children: [
-              // Add group and note fields here
-              const ListTile(title: Text('Nhóm, ghi chú...'))
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: [
+                    _buildGroupField(),
+                    const SizedBox(height: 16),
+                    _buildNotesField(),
+                  ],
+                ),
+              ),
             ],
           ),
           ExpansionTile(
             title: const Text('Thông tin xuất hóa đơn'),
-            children: [
-              // Add billing fields here
-              const ListTile(title: Text('Tên công ty, mã số thuế...'))
-            ],
+            children: [_buildBillingInfoSection()],
           ),
           SwitchListTile(
             title: const Text('Khách hàng là nhà cung cấp'),
@@ -274,83 +399,166 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
 
   // --- Field Widgets ---
 
-  Widget _buildNameField() => TextFormField(
+  /// Generic text field builder to reduce boilerplate
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    String? hintText,
+    bool readOnly = false,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+    Widget? suffixIcon,
+    VoidCallback? onTap,
+  }) {
+    return TextFormField(
+      controller: controller,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        suffixIcon: suffixIcon,
+        alignLabelWithHint: maxLines > 1,
+      ),
+      validator: validator,
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildNameField() => _buildTextField(
         controller: _nameController,
-        decoration: const InputDecoration(
-            labelText: 'Tên khách hàng', hintText: 'Bắt buộc'),
+        labelText: 'Tên khách hàng',
+        hintText: 'Bắt buộc',
         validator: (value) =>
             (value == null || value.isEmpty) ? 'Vui lòng nhập tên' : null,
       );
 
-  Widget _buildCodeField() => TextFormField(
+  Widget _buildCodeField() => _buildTextField(
         controller: _codeController,
+        labelText: 'Mã khách hàng',
+        hintText: 'Tự động',
         readOnly: true,
-        decoration: const InputDecoration(
-            labelText: 'Mã khách hàng', hintText: 'Tự động'),
       );
 
-  Widget _buildPhone1Field() => TextFormField(
+  Widget _buildPhone1Field() => _buildTextField(
         controller: _phone1Controller,
-        decoration: const InputDecoration(labelText: 'Điện thoại 1'),
+        labelText: 'Điện thoại 1',
         keyboardType: TextInputType.phone,
       );
 
-  Widget _buildPhone2Field() => TextFormField(
+  Widget _buildPhone2Field() => _buildTextField(
         controller: _phone2Controller,
-        decoration: const InputDecoration(labelText: 'Điện thoại 2'),
+        labelText: 'Điện thoại 2',
         keyboardType: TextInputType.phone,
       );
 
-  Widget _buildEmailField() => TextFormField(
+  Widget _buildEmailField() => _buildTextField(
         controller: _emailController,
-        decoration: const InputDecoration(labelText: 'Email'),
+        labelText: 'Email',
         keyboardType: TextInputType.emailAddress,
       );
 
-  Widget _buildFacebookField() => TextFormField(
+  Widget _buildFacebookField() => _buildTextField(
         controller: _facebookController,
-        decoration: const InputDecoration(labelText: 'Facebook'),
+        labelText: 'Facebook',
       );
 
-  Widget _buildBirthdayField() => TextFormField(
-        controller: _birthdayController,
-        readOnly: true,
-        decoration: const InputDecoration(
-          labelText: 'Sinh nhật',
-          suffixIcon: Icon(Icons.calendar_today),
-        ),
-        onTap: () async {
-          final pickedDate = await showDatePicker(
-            context: context,
-            initialDate: _selectedDate ?? DateTime.now(),
-            firstDate: DateTime(1900),
-            lastDate: DateTime.now(),
-          );
-          if (pickedDate != null && pickedDate != _selectedDate) {
-            setState(() {
-              _selectedDate = pickedDate;
-              _birthdayController.text =
-                  DateFormat('dd/MM/yyyy').format(pickedDate);
-            });
-          }
-        },
+  Widget _buildAddressField() => _buildTextField(
+        controller: _addressController,
+        labelText: 'Địa chỉ chi tiết',
+        maxLines: 3,
       );
+
+  Widget _buildNotesField() => _buildTextField(
+        controller: _notesController,
+        labelText: 'Ghi chú (Comments)',
+        maxLines: 3,
+      );
+
+  Widget _buildBirthdayField() => _buildTextField(
+        controller: _birthdayController,
+        labelText: 'Sinh nhật',
+        readOnly: true,
+        suffixIcon: const Icon(Icons.calendar_today),
+    onTap: () async {
+      final pickedDate = await showDatePicker(
+        context: context,
+        initialDate: _selectedDate ?? DateTime.now(),
+        firstDate: DateTime(1900),
+        lastDate: DateTime.now(),
+      );
+      if (pickedDate != null && pickedDate != _selectedDate) {
+        setState(() {
+          _selectedDate = pickedDate;
+          _birthdayController.text = DateFormat(
+            'dd/MM/yyyy',
+          ).format(pickedDate);
+        });
+      }
+    },
+  );
+
+  Widget _buildGroupField() {
+    return InputDecorator(
+      decoration: const InputDecoration(labelText: 'Nhóm khách hàng'),
+      child: Wrap(
+        spacing: 6.0,
+        runSpacing: 0.0,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ..._selectedGroups.map((group) {
+            return Chip(
+              label: Text(group),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.all(4),
+              onDeleted: () {
+                setState(() {
+                  _selectedGroups.remove(group);
+                });
+              },
+            );
+          }).toList(),
+          IntrinsicWidth(
+            child: TextFormField(
+              controller: _newGroupController,
+              decoration: const InputDecoration(
+                hintText: 'Thêm nhóm...',
+                border: InputBorder.none,
+                isDense: true,
+              ),
+              onFieldSubmitted: (value) {
+                final trimmedValue = value.trim();
+                if (trimmedValue.isNotEmpty &&
+                    !_selectedGroups.contains(trimmedValue)) {
+                  setState(() {
+                    _selectedGroups.add(trimmedValue);
+                    _newGroupController.clear();
+                  });
+                } else {
+                  _newGroupController.clear();
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildGenderField() => DropdownButtonFormField<String>(
-        value: _selectedGender,
-        decoration: const InputDecoration(labelText: 'Giới tính'),
-        items: ['Nam', 'Nữ', 'Khác']
-            .map((label) => DropdownMenuItem(
-                  value: label,
-                  child: Text(label),
-                ))
-            .toList(),
-        onChanged: (value) {
-          setState(() {
-            _selectedGender = value;
-          });
-        },
-      );
+    value: _selectedGender,
+    decoration: const InputDecoration(labelText: 'Giới tính'),
+    items: ['Nam', 'Nữ', 'Khác']
+        .map((label) => DropdownMenuItem(value: label, child: Text(label)))
+        .toList(),
+    onChanged: (value) {
+      setState(() {
+        _selectedGender = value;
+      });
+    },
+  );
 
   Widget _buildImageUploader() {
     return Column(
@@ -378,6 +586,113 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
           'Ảnh không được vượt quá 2MB',
           style: Theme.of(context).textTheme.bodySmall,
         ),
+      ],
+    );
+  }
+
+  Widget _buildBillingInfoSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SegmentedButton<String>(
+            style: SegmentedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            segments: const [
+              ButtonSegment(value: 'Cá nhân', label: Text('Cá nhân')),
+              ButtonSegment(
+                  value: 'Tổ chức', label: Text('Tổ chức/Hộ Kinh Doanh')),
+            ],
+            selected: {_billingType},
+            onSelectionChanged: (Set<String> newSelection) {
+              setState(() {
+                _billingType = newSelection.first;
+              });
+            },
+          ),
+          const SizedBox(height: 24),
+          if (_billingType == 'Cá nhân')
+            _buildIndividualBillingFields()
+          else
+            _buildOrganizationBillingFields(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIndividualBillingFields() {
+    return Column(
+      children: [
+        _buildTextField(
+            controller: _billingBuyerNameController, labelText: 'Tên người mua'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingAddressController, labelText: 'Địa chỉ'),
+        const SizedBox(height: 16),
+        _buildTextField(controller: _billingIdCardController, labelText: 'CCCD'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingPassportController, labelText: 'Sổ hộ chiếu'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingEmailController,
+            labelText: 'Email',
+            keyboardType: TextInputType.emailAddress),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingPhoneController,
+            labelText: 'Số điện thoại',
+            keyboardType: TextInputType.phone),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingBankNameController, labelText: 'Ngân hàng'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingBankAccountController,
+            labelText: 'Số tài khoản ngân hàng',
+            keyboardType: TextInputType.number),
+      ],
+    );
+  }
+
+  Widget _buildOrganizationBillingFields() {
+    return Column(
+      children: [
+        _buildTextField(
+            controller: _billingTaxCodeController, labelText: 'Mã số thuế'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingCompanyNameController, labelText: 'Tên công ty'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingAddressController, labelText: 'Địa chỉ'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingBuyerNameController, labelText: 'Tên người mua'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingStateBudgetCodeController, labelText: 'Mã ĐVQHNS'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingEmailController,
+            labelText: 'Email',
+            keyboardType: TextInputType.emailAddress),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingPhoneController,
+            labelText: 'Số điện thoại',
+            keyboardType: TextInputType.phone),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingBankNameController, labelText: 'Ngân hàng'),
+        const SizedBox(height: 16),
+        _buildTextField(
+            controller: _billingBankAccountController,
+            labelText: 'Số tài khoản ngân hàng',
+            keyboardType: TextInputType.number),
       ],
     );
   }

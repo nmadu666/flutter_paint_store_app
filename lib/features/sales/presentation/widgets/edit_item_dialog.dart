@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_paint_store_app/models/quote.dart';
-import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
+import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
 
 Future<void> showEditItemDialog(
   BuildContext context,
@@ -9,10 +9,10 @@ Future<void> showEditItemDialog(
   QuoteItem item,
 ) async {
   final quantityController = TextEditingController(text: item.quantity.toString());
-  final priceController = TextEditingController(text: item.unitPrice.toStringAsFixed(0));
-  final discountController = TextEditingController(text: item.discountValue.toStringAsFixed(0));
+  final priceController = TextEditingController(text: item.unitPrice.toString());
+  final discountController = TextEditingController(text: item.discount.toString());
   final noteController = TextEditingController(text: item.note);
-  bool isPercentage = item.isDiscountPercentage;
+  bool isPercentage = item.discountIsPercentage;
 
   return showDialog<void>(
     context: context,
@@ -78,17 +78,14 @@ Future<void> showEditItemDialog(
               FilledButton(
                 child: const Text('Lưu'),
                 onPressed: () {
-                  final notifier = ref.read(quoteProvider.notifier);
-                  final newQuantity = int.tryParse(quantityController.text) ?? item.quantity;
-                  final newPrice = double.tryParse(priceController.text) ?? item.unitPrice;
-                  final newDiscount = double.tryParse(discountController.text) ?? item.discountValue;
-                  final newNote = noteController.text;
-
-                  notifier.updateQuantity(item.id, newQuantity);
-                  notifier.updateUnitPrice(item.id, newPrice);
-                  notifier.applyDiscount(item.id, newDiscount, isPercentage);
-                  notifier.updateNote(item.id, newNote);
-
+                  final updatedItem = item.copyWith(
+                    quantity: int.tryParse(quantityController.text) ?? item.quantity,
+                    unitPrice: double.tryParse(priceController.text) ?? item.unitPrice,
+                    discount: double.tryParse(discountController.text) ?? item.discount,
+                    discountIsPercentage: isPercentage,
+                    note: noteController.text,
+                  );
+                  ref.read(quoteTabsProvider.notifier).updateItem(updatedItem);
                   Navigator.of(context).pop();
                 },
               ),

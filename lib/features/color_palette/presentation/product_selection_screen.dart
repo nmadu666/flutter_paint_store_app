@@ -7,7 +7,6 @@ import 'package:flutter_paint_store_app/models/paint_color.dart';
 import 'package:flutter_paint_store_app/models/parent_product.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
 import 'package:flutter_paint_store_app/models/cost_item.dart';
-import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
 
 import '../application/color_palette_state.dart';
 import 'price_details_dialog.dart';
@@ -423,7 +422,7 @@ class _CostSummaryCard extends ConsumerWidget {
     if (costDetails.items.isEmpty) {
       return const Card(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Text('Vui lòng chọn số lượng.'),
         ),
       );
@@ -501,7 +500,6 @@ class _ActionButtons extends ConsumerWidget {
             : () async {
                 final selectedProduct = ref.read(selectedParentProductProvider);
                 final color = ref.read(currentColorProvider);
-                // Read the costDetails again to ensure it's the latest.
                 final finalCostDetails = ref.read(costDetailsProvider);
 
                 if (selectedProduct != null) {
@@ -514,9 +512,8 @@ class _ActionButtons extends ConsumerWidget {
                     ),
                   );
 
-                  if (result != null && result.isNotEmpty) {
-                    ref.read(quoteProvider.notifier).addCostItems(result, color);
-                    Navigator.of(context).pop();
+                  if (result != null && result.isNotEmpty && context.mounted) {
+                    Navigator.of(context).pop(result);
                   }
                 }
               },

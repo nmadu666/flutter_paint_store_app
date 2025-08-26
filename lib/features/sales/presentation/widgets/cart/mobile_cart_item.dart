@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
+import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
 import 'package:flutter_paint_store_app/models/quote.dart';
 
 import '../edit_item_dialog.dart';
@@ -41,6 +41,7 @@ class _MobileCartItemState extends ConsumerState<MobileCartItem>
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    final quote = ref.watch(activeQuoteProvider);
     return GestureDetector(
       onHorizontalDragUpdate: (details) {
         if (details.primaryDelta! < -5) _controller.forward();
@@ -61,7 +62,7 @@ class _MobileCartItemState extends ConsumerState<MobileCartItem>
                       icon: Icons.copy_outlined,
                       label: 'Nhân bản',
                       onPressed: () {
-                        ref.read(quoteProvider.notifier).addDuplicateItem(item);
+                        ref.read(quoteTabsProvider.notifier).addDuplicateItem(item);
                         _controller.reverse();
                       },
                     ),
@@ -83,7 +84,7 @@ class _MobileCartItemState extends ConsumerState<MobileCartItem>
                       icon: Icons.delete_outline,
                       label: 'Xóa',
                       onPressed: () {
-                        ref.read(quoteProvider.notifier).removeItem(item.id);
+                        ref.read(quoteTabsProvider.notifier).removeItem(item.id);
                         _controller.reverse();
                       },
                     ),
@@ -115,7 +116,7 @@ class _MobileCartItemState extends ConsumerState<MobileCartItem>
                   ],
                 ),
                 trailing: ReorderableDragStartListener(
-                  index: ref.watch(quoteProvider).items.indexOf(item),
+                  index: quote?.items.indexOf(item) ?? 0,
                   child: const Icon(Icons.drag_handle),
                 ),
               ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
+import 'package:flutter_paint_store_app/models/cost_item.dart';
 
 import 'package:flutter_paint_store_app/features/color_palette/application/color_palette_state.dart';
 import 'package:flutter_paint_store_app/features/color_palette/domain/color_tone_helper.dart';
@@ -123,12 +125,23 @@ class ColorPaletteScreen extends ConsumerWidget {
     );
   }
 
-  void _showProductSelection(BuildContext context, PaintColor color) {
-    Navigator.of(context).push(
+  void _showProductSelection(BuildContext context, PaintColor color) async {
+    final result = await Navigator.of(context).push<List<CostItem>>(
       MaterialPageRoute(
         builder: (context) => ProductSelectionScreen(color: color),
       ),
     );
+
+    if (result != null && result.isNotEmpty && context.mounted) {
+      final ref = ProviderScope.containerOf(context).read(quoteTabsProvider.notifier);
+      ref.addCostItems(result, color);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã thêm ${result.length} mục vào báo giá.'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 }
 

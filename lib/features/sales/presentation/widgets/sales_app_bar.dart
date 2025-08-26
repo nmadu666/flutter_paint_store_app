@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
-import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
+import 'package:flutter_paint_store_app/features/sales/application/product_providers.dart';
+import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
+import 'package:flutter_paint_store_app/features/sales/application/ui_state_providers.dart';
 import 'price_formatter.dart';
 
 void _showAddedToCartSnackbar(BuildContext context, Product product) {
@@ -69,7 +71,7 @@ class SalesAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   AppBar _buildDesktopAppBar(BuildContext context, WidgetRef ref) {
     final allProductsAsync = ref.watch(salesProductsProvider);
-    final selectedPriceList = ref.watch(selectedPriceListProvider);
+    final selectedPriceList = ref.watch(activeSelectedPriceListProvider);
 
     return AppBar(
       title: const Text('Tạo Báo Giá / Đơn Hàng'),
@@ -90,7 +92,8 @@ class SalesAppBar extends ConsumerWidget implements PreferredSizeWidget {
               },
               displayStringForOption: (Product option) => '',
               onSelected: (Product selection) {
-                ref.read(quoteProvider.notifier).addItem(product: selection);
+                // TODO: Adapt to create a QuoteItem
+                // ref.read(quoteTabsProvider.notifier).addItem(product: selection);
                 _showAddedToCartSnackbar(context, selection);
               },
               optionsViewBuilder: (context, onSelected, options) {
@@ -163,4 +166,3 @@ class SalesAppBar extends ConsumerWidget implements PreferredSizeWidget {
     return Size.fromHeight(kToolbarHeight + (needsBottom ? kToolbarHeight : 0));
   }
 }
-

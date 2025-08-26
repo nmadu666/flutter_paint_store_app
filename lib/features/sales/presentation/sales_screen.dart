@@ -1,46 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
-import 'package:flutter_paint_store_app/features/sales/infrastructure/quote_pdf_service.dart';
+import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
+import 'package:flutter_paint_store_app/features/sales/application/ui_state_providers.dart';
+import 'package:flutter_paint_store_app/features/sales/presentation/widgets/cart/reorderable_desktop_cart_table.dart';
+import 'package:flutter_paint_store_app/features/sales/presentation/widgets/payment_summary.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/sales_app_bar.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/product_list.dart';
-import 'package:flutter_paint_store_app/features/sales/presentation/widgets/cart/desktop_cart_table.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/cart/mobile_cart_item.dart';
-import 'package:flutter_paint_store_app/features/sales/presentation/widgets/price_formatter.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/sales_header.dart';
+import 'package:flutter_paint_store_app/features/sales/presentation/widgets/sales_tab_bar.dart';
+
+import 'widgets/product_search_field.dart';
 
 class SalesScreen extends ConsumerWidget {
   const SalesScreen({super.key});
 
   Future<void> _handlePrintQuote(BuildContext context, WidgetRef ref) async {
-    final quote = ref.read(quoteProvider);
-    final quoteItems = quote.items;
-    if (quoteItems.isEmpty) {
+    final quote = ref.read(quoteTabsProvider).value?.activeQuote;
+    if (quote == null || quote.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Giỏ hàng đang trống!'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Báo giá trống. Vui lòng thêm sản phẩm.')),
       );
       return;
     }
-
-    if (ref.read(isPrintingProvider)) return;
-
-    ref.read(isPrintingProvider.notifier).state = true;
-    try {
-      final customer = ref.read(selectedCustomerProvider);
-      final total = ref.read(quoteTotalProvider);
-      await QuotePdfService().generateAndPrintQuote(
-        cartItems: quoteItems,
-        customer: customer,
-        totalAmount: total,
-      );
-    } finally {
-      if (ref.context.mounted) {
-        ref.read(isPrintingProvider.notifier).state = false;
-      }
-    }
+    // TODO: Implement PDF generation and printing
   }
 
   @override
@@ -59,192 +42,137 @@ class SalesScreen extends ConsumerWidget {
 
   Widget _buildMobileLayout(BuildContext context, WidgetRef ref) {
     final isShowingCart = ref.watch(isShowingCartMobileProvider);
-    final quoteItems = ref.watch(quoteProvider).items;
-
     return Scaffold(
       appBar: const SalesAppBar(isMobile: true),
       body: isShowingCart
           ? MobileCartView(onPrint: () => _handlePrintQuote(context, ref))
           : const ProductList(),
-      floatingActionButton: !isShowingCart && quoteItems.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: () =>
-                  ref.read(isShowingCartMobileProvider.notifier).state = true,
-              label: Text('Xem giỏ hàng (${quoteItems.length})'),
-              icon: const Icon(Icons.shopping_cart_outlined),
-            )
-          : null,
     );
   }
 
   Widget _buildDesktopLayout(BuildContext context, WidgetRef ref) {
-    final quote = ref.watch(quoteProvider);
+    final tabsAsyncState = ref.watch(quoteTabsProvider);
 
-    return Scaffold(
-      appBar: const SalesAppBar(isMobile: false),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 2,
-            child: ReorderableDesktopCartTable(
-              items: quote.items,
-              onReorder: (oldIndex, newIndex) {
-                ref
-                    .read(quoteProvider.notifier)
-                    .reorderItem(oldIndex, newIndex);
-              },
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
+    return tabsAsyncState.when(
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, stack) => Scaffold(body: Center(child: Text('Lỗi: $err'))),
+      data: (tabsState) {
+        return DefaultTabController(
+          length: tabsState.quotes.length,
+          initialIndex: tabsState.activeTabIndex,
+          child: Builder(builder: (context) {
+            final tabController = DefaultTabController.of(context);
+            tabController.addListener(() {
+              if (!tabController.indexIsChanging) {
+                ref.read(quoteTabsProvider.notifier).setActiveTab(tabController.index);
+              }
+            });
+
+            return Scaffold(
+              appBar: const SalesAppBar(isMobile: false),
+              body: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SalesHeader(),
                   Expanded(
-                    child: PaymentSummary(
-                        onPrint: () => _handlePrintQuote(context, ref)),
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Expanded(child: ProductSearchField()),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 2,
+                                child: const SalesTabBar(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: tabsState.quotes.map((quote) {
+                              return ReorderableDesktopCartTable(
+                                key: ValueKey(quote.id),
+                                items: quote.items,
+                                onReorder: (oldIndex, newIndex) {
+                                  ref
+                                      .read(quoteTabsProvider.notifier)
+                                      .reorderItem(oldIndex, newIndex);
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        children: [
+                          const SalesHeader(),
+                          const SizedBox(height: 24),
+                          Expanded(
+                            child: PaymentSummary(
+                                onPrint: () => _handlePrintQuote(context, ref)),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class MobileCartView extends StatelessWidget {
-  final VoidCallback onPrint;
-  const MobileCartView({super.key, required this.onPrint});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer(
-      builder: (context, ref, child) {
-        final quoteItems = ref.watch(quoteProvider).items;
-
-        if (quoteItems.isEmpty) {
-          return const Center(child: Text('Giỏ hàng của bạn đang trống.'));
-        }
-
-        return Column(
-          children: [
-            const SalesHeader(),
-            const Divider(height: 1),
-            Expanded(
-              child: ReorderableListView.builder(
-                itemCount: quoteItems.length,
-                itemBuilder: (context, index) {
-                  final item = quoteItems[index];
-                  return MobileCartItem(key: ValueKey(item.id), item: item);
-                },
-                onReorder: (oldIndex, newIndex) {
-                  ref.read(quoteProvider.notifier).reorderItem(oldIndex, newIndex);
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: PaymentSummary(onPrint: onPrint, useSpacer: false),
-            ),
-          ],
+            );
+          }),
         );
       },
     );
   }
 }
 
-class PaymentSummary extends ConsumerWidget {
+class MobileCartView extends ConsumerWidget {
   final VoidCallback onPrint;
-  final bool useSpacer;
-  const PaymentSummary({super.key, required this.onPrint, this.useSpacer = true});
+
+  const MobileCartView({super.key, required this.onPrint});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final quote = ref.watch(quoteProvider);
-    final cartTotal = ref.watch(quoteTotalProvider);
-    final isPrinting = ref.watch(isPrintingProvider);
+    final tabsAsyncState = ref.watch(quoteTabsProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Tổng Quan Thanh Toán',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 24),
-        _buildSummaryRow(
-          context,
-          'Tiền hàng',
-          formatPrice(cartTotal),
-        ),
-        const SizedBox(height: 16),
-        _buildSummaryRow(
-          context,
-          'Giảm giá',
-          '-${formatPrice(quote.items.fold<double>(0.0, (sum, item) => sum + item.totalDiscount))}',
-        ),
-        const SizedBox(height: 16),
-        _buildSummaryRow(context, 'Thu khác', formatPrice(0)),
-        const Divider(height: 32),
-        _buildSummaryRow(
-          context,
-          'Cần thanh toán',
-          formatPrice(cartTotal),
-          isTotal: true,
-        ),
-        if (useSpacer) const Spacer(),
-        if (!useSpacer) const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: isPrinting ? null : onPrint,
-          icon: isPrinting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.print_outlined),
-          label: Text(
-            isPrinting ? 'Đang xử lý...' : 'In & Lưu Báo Giá',
-          ),
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-        ),
-        const SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-          child: const Text('Tạo Đơn Hàng'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryRow(
-    BuildContext context,
-    String title,
-    String value, {
-    bool isTotal = false,
-  }) {
-    final style = isTotal
-        ? Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
-        : Theme.of(context).textTheme.bodyLarge;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: style),
-        Text(value, style: style),
-      ],
+    return tabsAsyncState.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Lỗi: $err')),
+      data: (tabsState) {
+        final quote = tabsState.activeQuote;
+        if (quote == null || quote.items.isEmpty) {
+          return const Center(
+            child: Text('Báo giá của bạn đang trống.'),
+          );
+        }
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: quote.items.length,
+                itemBuilder: (context, index) {
+                  return MobileCartItem(item: quote.items[index]);
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: PaymentSummary(onPrint: onPrint),
+            ),
+          ],
+        );
+      },
     );
   }
 }

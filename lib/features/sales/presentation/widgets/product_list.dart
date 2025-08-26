@@ -1,7 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
+import 'package:flutter_paint_store_app/features/sales/application/product_providers.dart';
+import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/price_formatter.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/sales_header.dart';
@@ -23,7 +24,7 @@ class ProductList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filteredProducts = ref.watch(filteredSalesProductsProvider);
     final productsAsync = ref.watch(salesProductsProvider);
-    final selectedPriceList = ref.watch(selectedPriceListProvider);
+    final selectedPriceList = ref.watch(activeSelectedPriceListProvider);
 
     return productsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -61,27 +62,23 @@ class ProductCounter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final quoteItems = ref.watch(quoteProvider).items;
-    final itemsInCart = quoteItems
-        .where((item) => item.product.id == product.id && item.color == null)
-        .toList();
+    final quote = ref.watch(activeQuoteProvider);
+    final itemInCart = quote?.items.firstWhereOrNull(
+      (item) => item.product.id == product.id && item.color == null,
+    );
 
-    if (itemsInCart.isEmpty) {
+    if (itemInCart == null) {
       return IconButton(
         icon: const Icon(Icons.add_shopping_cart_outlined),
         tooltip: 'Thêm vào giỏ',
         onPressed: () {
-          ref.read(quoteProvider.notifier).addItem(product: product);
+          ref.read(quoteTabsProvider.notifier).addOrUpdateProduct(product);
           _showAddedToCartSnackbar(context, product);
         },
       );
     }
 
-    if (itemsInCart.length > 1) {
-      return Chip(label: Text('${itemsInCart.length} dòng trong giỏ'));
-    }
-
-    final item = itemsInCart.first;
+    final item = itemInCart;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -89,9 +86,14 @@ class ProductCounter extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.remove_circle_outline),
           tooltip: 'Bớt',
-          onPressed: () => ref
-              .read(quoteProvider.notifier)
-              .updateQuantity(item.id, item.quantity - 1),
+          onPressed: () {
+            final newQuantity = item.quantity - 1;
+            if (newQuantity > 0) {
+              ref.read(quoteTabsProvider.notifier).updateItem(item.copyWith(quantity: newQuantity));
+            } else {
+              ref.read(quoteTabsProvider.notifier).removeItem(item.id);
+            }
+          }
         ),
         Text(
           item.quantity.toString(),
@@ -100,9 +102,7 @@ class ProductCounter extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.add_circle_outline),
           tooltip: 'Thêm',
-          onPressed: () => ref
-              .read(quoteProvider.notifier)
-              .updateQuantity(item.id, item.quantity + 1),
+          onPressed: () => ref.read(quoteTabsProvider.notifier).addOrUpdateProduct(product),
         ),
       ],
     );

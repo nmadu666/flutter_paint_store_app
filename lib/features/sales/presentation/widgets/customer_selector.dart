@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_paint_store_app/models/customer.dart';
-import 'package:flutter_paint_store_app/features/sales/application/sales_state.dart';
+import 'package:flutter_paint_store_app/features/sales/application/customer_providers.dart';
+import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
 import 'customer_dialog.dart';
 
 class CustomerSelector extends ConsumerWidget {
@@ -10,41 +11,29 @@ class CustomerSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final customers = ref.watch(customersProvider);
-    final selectedCustomer = ref.watch(selectedCustomerProvider);
+    final selectedCustomer = ref.watch(activeSelectedCustomerProvider);
 
     return Autocomplete<Customer>(
-      // Sử dụng Key để đảm bảo Autocomplete được xây dựng lại với giá trị
-      // ban đầu mới khi khách hàng được chọn thay đổi từ bên ngoài.
-      // Đây là cách làm chuẩn trong Flutter để reset state của một widget.
       key: ValueKey(selectedCustomer),
       initialValue: TextEditingValue(
         text: selectedCustomer?.name ?? '',
-        // Di chuyển con trỏ đến cuối khi có giá trị
         selection: TextSelection.fromPosition(
           TextPosition(offset: selectedCustomer?.name.length ?? 0),
         ),
       ),
       optionsBuilder: (TextEditingValue textEditingValue) {
-        // LƯU Ý: Việc sử dụng optionsBuilder bất đồng bộ (async) có thể gây ra
-        // lỗi trên các phiên bản Flutter cũ. Logic được giữ ở dạng đồng bộ
-        // để tránh race condition khi trường văn bản mất focus trong lúc
-        // các tùy chọn đang được tải.
-
         final query = textEditingValue.text.toLowerCase();
         return customers.where((Customer option) {
-          // Luôn lọc bỏ "Khách lẻ" khỏi danh sách tùy chọn
-          if (option.id == '1') {
+          if (option.id == 1) {
             return false;
           }
-          // Nếu không có truy vấn, hiển thị tất cả khách hàng khác.
-          // Ngược lại, lọc theo tên.
           return query.isEmpty ||
               option.name.toLowerCase().contains(query);
         });
       },
       displayStringForOption: (Customer option) => option.name,
       onSelected: (Customer selection) {
-        ref.read(quoteProvider.notifier).selectCustomer(selection);
+        ref.read(quoteTabsProvider.notifier).updateCustomerForActiveQuote(selection);
         FocusScope.of(context).unfocus();
       },
       fieldViewBuilder: (BuildContext context,
@@ -54,9 +43,8 @@ class CustomerSelector extends ConsumerWidget {
         return TextFormField(
           controller: fieldTextEditingController,
           focusNode: fieldFocusNode,
-          // Khi nhấn vào trường text, nếu là khách lẻ thì xóa để tìm kiếm
           onTap: () {
-            if (selectedCustomer?.id == '1') {
+            if (selectedCustomer?.id == 1) {
               fieldTextEditingController.clear();
             }
           },
@@ -66,8 +54,7 @@ class CustomerSelector extends ConsumerWidget {
             suffixIcon: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                                if (selectedCustomer != null && selectedCustomer.id != 1)
-
+                if (selectedCustomer != null && selectedCustomer.id != 1)
                   IconButton(
                     tooltip: 'Sửa khách hàng',
                     icon: const Icon(Icons.edit_outlined, size: 18),
@@ -86,7 +73,7 @@ class CustomerSelector extends ConsumerWidget {
                     onPressed: () {
                       final retailCustomer =
                           customers.firstWhere((c) => c.id == 1);
-                      ref.read(quoteProvider.notifier).selectCustomer(retailCustomer);
+                      ref.read(quoteTabsProvider.notifier).updateCustomerForActiveQuote(retailCustomer);
                       fieldFocusNode.unfocus();
                     },
                   ),
