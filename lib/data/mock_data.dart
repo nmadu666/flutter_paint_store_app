@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/order.dart';
 import '../models/paint_color.dart';
 import '../models/customer.dart';
 import '../models/paint_color_price.dart';
@@ -600,5 +601,147 @@ final List<Customer> mockCustomers = [
     groups: ['Khách lẻ'],
     rewardPoint: 250,
     psidFacebook: null,
+  ),
+];
+
+// ===========================================================================
+// 3. Mock Orders - Complex data combining customers and products
+// ===========================================================================
+
+final List<Order> mockOrders = [
+  // Order 1: Completed order for Anh Sơn
+  Order(
+    id: 101,
+    code: 'HD00101',
+    purchaseDate: DateTime(2024, 5, 20, 10, 30),
+    branchId: 1,
+    branchName: 'Chi nhánh trung tâm',
+    customerId: 2,
+    customerName: 'Anh Sơn - Cầu Giấy',
+    total: 1120000, // (450000 * 2) + 220000
+    totalPayment: 1150000, // Paid for order + delivery
+    discountRatio: 0,
+    discount: 0,
+    status: 1,
+    statusValue: 'Hoàn thành',
+    description: 'Giao hàng nhanh trước 5h chiều. Khách quen.',
+    usingCod: true,
+    retailerId: 1,
+    modifiedDate: DateTime(2024, 5, 20, 15, 0),
+    createdDate: DateTime(2024, 5, 20, 10, 30),
+    orderDetails: [
+      OrderDetail(
+        productId: 1002, // Mock product ID
+        productCode: 'JMA5',
+        productName: 'Jotun Majestic - Base A (5L)',
+        quantity: 2,
+        price: 450000,
+        discount: 0,
+        discountRatio: 0,
+        note: 'Pha màu AP02-3 Vàng Chanh',
+        isMaster: false,
+      ),
+      OrderDetail(
+        productId: 2001, // Mock product ID
+        productCode: 'VT002',
+        productName: 'Sơn Lót Chống Kiềm Nội Thất Jotun (18L)',
+        quantity: 1,
+        price: 220000,
+        discount: 0,
+        discountRatio: 0,
+        note: '',
+        isMaster: false,
+      ),
+    ],
+    payments: [
+      Payment(
+        id: 201,
+        code: 'TT00201',
+        amount: 1150000,
+        method: 'Tiền mặt',
+        status: 1,
+        transDate: DateTime(2024, 5, 20, 15, 5),
+        accountId: 101,
+      ),
+    ],
+    orderDelivery: OrderDelivery(
+      deliveryCode: 'GHN-XYZ123',
+      type: 'Giao hàng nhanh',
+      price: 30000,
+      receiver: 'Anh Sơn',
+      contactNumber: '0912345678',
+      address: '123 Đường Cầu Giấy, Quận Cầu Giấy, Hà Nội',
+      locationId: 1,
+      locationName: 'Hà Nội',
+      weight: 25,
+      length: 40,
+      width: 40,
+      height: 50,
+      partnerDeliveryId: 1,
+      partnerDelivery: {'name': 'Giao Hàng Nhanh'},
+    ),
+    invoiceOrderSurcharges: [],
+  ),
+
+  // Order 2: Processing order for a company, no payment yet
+  Order(
+    id: 102,
+    code: 'HD00102',
+    purchaseDate: DateTime(2024, 5, 21, 14, 0),
+    branchId: 1,
+    branchName: 'Chi nhánh trung tâm',
+    customerId: 3,
+    customerName: 'Công ty Xây dựng ABC',
+    total: 32350000, // (570000 * 50) + (85000 * 100)
+    totalPayment: 0,
+    discountRatio: 0,
+    discount: 0,
+    status: 2,
+    statusValue: 'Đang xử lý',
+    description: 'Xuất hóa đơn VAT. Giao hàng tại công trình.',
+    usingCod: false,
+    retailerId: 1,
+    modifiedDate: DateTime(2024, 5, 21, 14, 5),
+    createdDate: DateTime(2024, 5, 21, 14, 0),
+    orderDetails: [
+      OrderDetail(
+        productId: 1004, // Mock product ID
+        productCode: 'DWA5',
+        productName: 'Dulux Weathershield - Base A (5L)',
+        quantity: 50,
+        price: 570000, // Discounted price
+        discount: 30000,
+        discountRatio: 0.05,
+        note: 'Pha màu AP03-2 Xanh Bạc Hà',
+        isMaster: false,
+      ),
+      OrderDetail(
+        productId: 2002, // Mock product ID
+        productCode: 'VT005',
+        productName: 'Bột Trét Tường Ngoại Thất Dulux (40kg)',
+        quantity: 100,
+        price: 85000, // Project price
+        discount: 15000,
+        discountRatio: 0.15,
+        note: '',
+        isMaster: false,
+      ),
+    ],
+    payments: [], // No payment yet
+    orderDelivery: OrderDelivery(
+      deliveryCode: 'VC-ABC-001',
+      type: 'Tự vận chuyển',
+      price: 0,
+      receiver: 'Giám sát công trình - Anh Hùng',
+      contactNumber: '0909123456',
+      address: 'Công trình Vinhome Smart City, Tây Mỗ, Nam Từ Liêm, Hà Nội',
+      locationId: 1,
+      locationName: 'Hà Nội',
+      weight: 1000,
+      partnerDelivery: {'name': 'Tự vận chuyển'},
+    ),
+    invoiceOrderSurcharges: [
+      {'surchargeId': 1, 'surchargeName': 'VAT', 'price': 2985000},
+    ],
   ),
 ];
