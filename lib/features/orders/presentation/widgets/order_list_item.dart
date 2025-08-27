@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../models/order.dart';
-
+import 'order_details_dialog.dart';
 
 class OrderListItem extends StatelessWidget {
   final Order order;
@@ -37,12 +37,18 @@ class OrderListItem extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
-      elevation: 3,
+      elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
-      child: ExpansionTile(
-        title: _buildTitle(context, statusText, statusColor, textTheme),
-        children: [_buildActionButtons(context)],
+      child: InkWell(
+        onTap: () => _showOrderDetailsDialog(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTitle(context, statusText, statusColor, textTheme),
+            _buildActionButtons(context),
+          ],
+        ),
       ),
     );
   }
@@ -50,7 +56,7 @@ class OrderListItem extends StatelessWidget {
   Widget _buildTitle(
       BuildContext context, String statusText, Color statusColor, TextTheme textTheme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -92,37 +98,62 @@ class OrderListItem extends StatelessWidget {
 
   Widget _buildActionButtons(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      color: Colors.grey.shade100,
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.03),
+        border: Border(top: BorderSide(color: Colors.grey.shade200, width: 1)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          TextButton.icon(
-            icon: const Icon(Icons.print_outlined),
-            label: const Text('In'),
-            onPressed: () {
-              // TODO: Implement print functionality
-            },
+          _actionButton(
+            context,
+            icon: Icons.info_outline,
+            label: 'Chi tiết',
+            onPressed: () => _showOrderDetailsDialog(context),
           ),
-          TextButton.icon(
-            icon: const Icon(Icons.share_outlined),
-            label: const Text('Chia sẻ'),
-            onPressed: () {
-              // TODO: Implement share functionality
-            },
+          _actionButton(
+            context,
+            icon: Icons.print_outlined,
+            label: 'In',
+            onPressed: () { /* TODO: Implement print */ },
           ),
-          if (order.status != 3) // 3: Đã huỷ
-            TextButton.icon(
-              icon: const Icon(Icons.cancel_outlined),
-              label: const Text('Huỷ đơn'),
-              style: TextButton.styleFrom(foregroundColor: Colors.red.shade700),
-              onPressed: () {
-                // TODO: Implement cancel functionality
-              },
+          _actionButton(
+            context,
+            icon: Icons.share_outlined,
+            label: 'Chia sẻ',
+            onPressed: () { /* TODO: Implement share */ },
+          ),
+          if (order.status != 3) // Not cancelled
+            _actionButton(
+              context,
+              icon: Icons.cancel_outlined,
+              label: 'Huỷ đơn',
+              color: Colors.red.shade700,
+              onPressed: () { /* TODO: Implement cancel */ },
             ),
         ],
       ),
     );
   }
-}
 
+  Widget _actionButton(BuildContext context, {required IconData icon, required String label, required VoidCallback onPressed, Color? color}) {
+    return TextButton.icon(
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: TextButton.styleFrom(
+        foregroundColor: color ?? Theme.of(context).colorScheme.onSurface,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      ),
+      onPressed: onPressed,
+    );
+  }
+
+  void _showOrderDetailsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return OrderDetailsDialog(order: order);
+      },
+    );
+  }
+}
