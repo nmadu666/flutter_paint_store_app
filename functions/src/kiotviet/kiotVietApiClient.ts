@@ -65,8 +65,8 @@ export async function getKiotVietAccessToken(
     let errorMessage = "Không thể kết nối hoặc lấy token từ KiotViet.";
     if (error instanceof AxiosError) {
       console.error(
-        "KiotViet API error:",
-        error.response?.data || error.message
+        `KiotViet token API error for clientId '${clientId}':`,
+        error.response?.data || error.message,
       );
       const errorDesc =
         error.response?.data?.error_description || error.message;

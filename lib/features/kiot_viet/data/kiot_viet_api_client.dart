@@ -6,18 +6,15 @@ class KiotVietApiClient {
   /// Fetches data from the KiotViet API via a Firebase Functions proxy.
   ///
   /// The [endpoint] is the KiotViet API endpoint (e.g., 'branches').
-  /// The [retailer] is the name of your KiotViet store.
   /// The [params] are the query parameters for the API call.
   Future<Map<String, dynamic>> get({
     required String endpoint,
-    required String retailer,
     Map<String, dynamic>? params,
   }) async {
     try {
       final callable = _functions.httpsCallable('kiotVietGetProxy');
       final result = await callable.call<Map<String, dynamic>>({
         'endpoint': endpoint,
-        'retailer': retailer,
         'params': params,
       });
       return result.data;
@@ -32,3 +29,4 @@ class KiotVietApiClient {
     }
   }
 }
+
