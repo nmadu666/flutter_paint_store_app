@@ -279,7 +279,7 @@ class OrderDetailsDialog extends StatelessWidget {
           width: double.infinity,
           child: DataTable(
             columnSpacing: 16,
-            headingRowColor: MaterialStateProperty.all(Colors.grey.shade200),
+            headingRowColor: WidgetStateProperty.all(Colors.grey.shade200),
             columns: const [
               DataColumn(label: Text('Mã hàng')), DataColumn(label: Text('Tên hàng')), DataColumn(label: Text('SL')), DataColumn(label: Text('Đơn giá')), DataColumn(label: Text('Giảm giá')), DataColumn(label: Text('Giá bán')), DataColumn(label: Text('Thành tiền')),
             ],

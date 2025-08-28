@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:collection/collection.dart'; // For listEquals in operator ==
+// For listEquals in operator ==
 
 @immutable
 class Customer {

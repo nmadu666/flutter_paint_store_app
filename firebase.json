@@ -1,1 +1,42 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"flutter-paint-store-app","appId":"1:31364040406:android:bd92e35a84c008c3b36b77","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"flutter-paint-store-app","configurations":{"android":"1:31364040406:android:bd92e35a84c008c3b36b77","ios":"1:31364040406:ios:1fe5b604a793bc00b36b77","macos":"1:31364040406:ios:1fe5b604a793bc00b36b77","web":"1:31364040406:web:3acd0bb8dfcc0e4eb36b77","windows":"1:31364040406:web:23568ce9b70f8b43b36b77"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "flutter-paint-store-app",
+          "appId": "1:31364040406:android:bd92e35a84c008c3b36b77",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "flutter-paint-store-app",
+          "configurations": {
+            "android": "1:31364040406:android:bd92e35a84c008c3b36b77",
+            "ios": "1:31364040406:ios:1fe5b604a793bc00b36b77",
+            "macos": "1:31364040406:ios:1fe5b604a793bc00b36b77",
+            "web": "1:31364040406:web:3acd0bb8dfcc0e4eb36b77",
+            "windows": "1:31364040406:web:23568ce9b70f8b43b36b77"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ]
+}

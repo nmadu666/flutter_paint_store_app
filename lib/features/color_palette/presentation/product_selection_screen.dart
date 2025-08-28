@@ -417,12 +417,13 @@ class _QuantityCounter extends ConsumerWidget {
 class _CostSummaryCard extends ConsumerWidget {
   const _CostSummaryCard();
 
-    Widget build(BuildContext context, WidgetRef ref) {
+    @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final costDetails = ref.watch(costDetailsProvider);
     if (costDetails.items.isEmpty) {
       return const Card(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0),
           child: Text('Vui lòng chọn số lượng.'),
         ),
       );
@@ -494,7 +495,6 @@ class _ActionButtons extends ConsumerWidget {
     final completeButton = SizedBox(
       width: isDesktop ? 200 : double.infinity,
       child: FilledButton(
-        child: const Text('Hoàn tất'),
         onPressed: totalItems == 0
             ? null
             : () async {
@@ -517,6 +517,7 @@ class _ActionButtons extends ConsumerWidget {
                   }
                 }
               },
+        child: const Text('Hoàn tất'),
       ),
     );
 

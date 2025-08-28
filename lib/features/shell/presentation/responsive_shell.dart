@@ -16,72 +16,73 @@ class ResponsiveShell extends StatefulWidget {
 class _ResponsiveShellState extends State<ResponsiveShell> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
-    const DashboardScreen(),
-    const ColorPaletteScreen(),
-    const SalesScreen(),
-    const OrdersScreen(),
-    const OtherScreen(),
-  ];
+  List<Widget> _getScreens(String userRole) => [
+        const DashboardScreen(),
+        const ColorPaletteScreen(),
+        const SalesScreen(),
+        const OrdersScreen(),
+        OtherScreen(userRole: userRole),
+      ];
 
   List<NavigationRailDestination> get _adminDestinations => const [
-    NavigationRailDestination(
-      icon: Icon(Icons.dashboard_outlined),
-      selectedIcon: Icon(Icons.dashboard),
-      label: Text('Tổng quan'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.color_lens_outlined),
-      selectedIcon: Icon(Icons.color_lens),
-      label: Text('Bảng màu'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.shopping_cart_outlined),
-      selectedIcon: Icon(Icons.shopping_cart),
-      label: Text('Bán hàng'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.request_quote_outlined),
-      selectedIcon: Icon(Icons.request_quote),
-      label: Text('Đặt hàng'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.admin_panel_settings_outlined),
-      selectedIcon: Icon(Icons.admin_panel_settings),
-      label: Text('Quản trị'),
-    ),
-  ];
+        NavigationRailDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: Text('Tổng quan'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.color_lens_outlined),
+          selectedIcon: Icon(Icons.color_lens),
+          label: Text('Bảng màu'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.shopping_cart_outlined),
+          selectedIcon: Icon(Icons.shopping_cart),
+          label: Text('Bán hàng'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.request_quote_outlined),
+          selectedIcon: Icon(Icons.request_quote),
+          label: Text('Đặt hàng'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.admin_panel_settings_outlined),
+          selectedIcon: Icon(Icons.admin_panel_settings),
+          label: Text('Quản trị'),
+        ),
+      ];
 
   List<NavigationRailDestination> get _saleDestinations => const [
-    NavigationRailDestination(
-      icon: Icon(Icons.dashboard_outlined),
-      selectedIcon: Icon(Icons.dashboard),
-      label: Text('Tổng quan'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.color_lens_outlined),
-      selectedIcon: Icon(Icons.color_lens),
-      label: Text('Bảng màu'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.shopping_cart_outlined),
-      selectedIcon: Icon(Icons.shopping_cart),
-      label: Text('Bán hàng'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.request_quote_outlined),
-      selectedIcon: Icon(Icons.request_quote),
-      label: Text('Đặt hàng'),
-    ),
-    NavigationRailDestination(
-      icon: Icon(Icons.more_horiz_outlined),
-      selectedIcon: Icon(Icons.more_horiz),
-      label: Text('Khác'),
-    ),
-  ];
+        NavigationRailDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: Text('Tổng quan'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.color_lens_outlined),
+          selectedIcon: Icon(Icons.color_lens),
+          label: Text('Bảng màu'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.shopping_cart_outlined),
+          selectedIcon: Icon(Icons.shopping_cart),
+          label: Text('Bán hàng'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.request_quote_outlined),
+          selectedIcon: Icon(Icons.request_quote),
+          label: Text('Đặt hàng'),
+        ),
+        NavigationRailDestination(
+          icon: Icon(Icons.more_horiz_outlined),
+          selectedIcon: Icon(Icons.more_horiz),
+          label: Text('Khác'),
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
+    final screens = _getScreens(widget.userRole);
     final destinations = widget.userRole == 'admin'
         ? _adminDestinations
         : _saleDestinations;
@@ -121,14 +122,14 @@ class _ResponsiveShellState extends State<ResponsiveShell> {
                   ),
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
-                Expanded(child: _screens[_selectedIndex]),
+                Expanded(child: screens[_selectedIndex]),
               ],
             ),
           );
         }
         // Giao diện cho Mobile
         return Scaffold(
-          body: _screens[_selectedIndex],
+          body: screens[_selectedIndex],
           bottomNavigationBar: NavigationBar(
             selectedIndex: _selectedIndex,
             onDestinationSelected: (index) =>

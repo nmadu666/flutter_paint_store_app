@@ -495,7 +495,7 @@ final List<Product> mockSalesProducts = [
         },
       );
     });
-  }).toList(),
+  }),
 
   // Standalone products (no tinting)
   ...mockStandaloneProducts,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../models/paint_color.dart';
 
 /// Enum representing different color tones for filtering.
 enum ColorTone {

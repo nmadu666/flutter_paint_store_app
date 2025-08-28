@@ -1,5 +1,4 @@
 
-import 'dart:math';
 
 import 'package:flutter_paint_store_app/features/color_palette/application/color_palette_state.dart';
 import 'package:flutter_paint_store_app/models/paint_color.dart';

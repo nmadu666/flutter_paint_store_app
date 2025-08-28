@@ -8,7 +8,7 @@ import '../price_formatter.dart';
 
 class MobileCartItem extends ConsumerStatefulWidget {
   final QuoteItem item;
-  const MobileCartItem({required this.item, Key? key}) : super(key: key);
+  const MobileCartItem({required this.item, super.key});
 
   @override
   ConsumerState<MobileCartItem> createState() => _MobileCartItemState();
@@ -52,7 +52,7 @@ class _MobileCartItemState extends ConsumerState<MobileCartItem>
         children: [
           Positioned.fill(
             child: Container(
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

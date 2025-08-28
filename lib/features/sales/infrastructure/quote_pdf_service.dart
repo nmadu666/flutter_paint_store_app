@@ -87,7 +87,7 @@ class QuotePdfService {
         ),
         if (customer!.address!.isNotEmpty)
           pw.Text('Địa chỉ: ${customer.address}'),
-        if (customer?.contactNumber!.isNotEmpty ?? false)
+        if (customer.contactNumber!.isNotEmpty ?? false)
           pw.Text('Điện thoại: ${customer.contactNumber}'),
       ],
     );

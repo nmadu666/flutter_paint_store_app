@@ -519,7 +519,7 @@ class _CustomerDialogState extends ConsumerState<CustomerDialog> {
                 });
               },
             );
-          }).toList(),
+          }),
           IntrinsicWidth(
             child: TextFormField(
               controller: _newGroupController,

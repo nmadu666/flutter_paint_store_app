@@ -1,10 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_paint_store_app/models/cost_item.dart';
-import 'package:flutter_paint_store_app/models/paint_color.dart';
 import 'package:flutter_paint_store_app/models/parent_product.dart';
-import 'package:flutter_paint_store_app/models/product.dart';
-import 'package:flutter_paint_store_app/features/color_palette/application/color_palette_state.dart';
 
 // 1. State Class
 @immutable

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import '../application/order_provider.dart';
 import 'widgets/order_list_item.dart';
@@ -9,6 +10,9 @@ class OrdersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final RefreshController refreshController = RefreshController(
+      initialRefresh: false,
+    );
     final ordersAsync = ref.watch(ordersProvider);
 
     return Scaffold(
@@ -19,18 +23,42 @@ class OrdersScreen extends ConsumerWidget {
       ),
       body: ordersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Lỗi: $err')),
+        error: (err, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Lỗi: $err'),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  ref.refresh(ordersProvider);
+                },
+                child: const Text('Thử lại'),
+              ),
+            ],
+          ),
+        ),
         data: (orders) {
           if (orders.isEmpty) {
-            return const Center(child: Text('Không có đơn hàng nào.'));
+            return const Center(
+              child: Text(
+                'Không có đơn hàng nào.',
+                style: TextStyle(fontSize: 16),
+              ),
+            );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.all(8.0),
-            itemCount: orders.length,
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return OrderListItem(order: order);
+          return SmartRefresher(
+            controller: refreshController,
+            onRefresh: () async {
+              ref.refresh(ordersProvider);
+              refreshController.refreshCompleted();
             },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(8.0),
+              itemCount: orders.length,
+              itemBuilder: (context, index) =>
+                  OrderListItem(order: orders[index]),
+            ),
           );
         },
       ),
