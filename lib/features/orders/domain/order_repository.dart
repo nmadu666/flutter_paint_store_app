@@ -1,10 +1,9 @@
-import '../../../models/customer.dart';
 import '../../../models/order.dart';
 
-/// Abstract interface for the orders data layer.
 abstract class OrderRepository {
+  /// Fetches a list of orders and validates their related entities against Firebase.
   Future<List<Order>> getOrders();
 
-  Future<List<Customer>> getCustomers();
+  /// Fetches a single, detailed order by its ID from the data source.
+  Future<Order> getOrderById(int id);
 }
-

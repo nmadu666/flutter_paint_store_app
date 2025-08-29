@@ -31,7 +31,7 @@ class OrdersScreen extends ConsumerWidget {
               const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () {
-                  ref.refresh(ordersProvider);
+                  ref.invalidate(kiotVietOrdersProvider);
                 },
                 child: const Text('Thử lại'),
               ),
@@ -50,14 +50,14 @@ class OrdersScreen extends ConsumerWidget {
           return SmartRefresher(
             controller: refreshController,
             onRefresh: () async {
-              ref.refresh(ordersProvider);
+              ref.invalidate(kiotVietOrdersProvider);
               refreshController.refreshCompleted();
             },
             child: ListView.builder(
               padding: const EdgeInsets.all(8.0),
               itemCount: orders.length,
               itemBuilder: (context, index) =>
-                  OrderListItem(order: orders[index]),
+                  OrderListItem(orderWithCustomer: orders[index]),
             ),
           );
         },

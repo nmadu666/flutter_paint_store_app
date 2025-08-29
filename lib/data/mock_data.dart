@@ -608,7 +608,7 @@ final List<Customer> mockCustomers = [
 // 3. Mock Orders - Complex data combining customers and products
 // ===========================================================================
 
-final List<Order> mockOrders = [
+/* final List<Order> mockOrders = [
   // Order 1: Completed order for Anh Sơn
   Order(
     id: 101,
@@ -745,3 +745,4 @@ final List<Order> mockOrders = [
     ],
   ),
 ];
+ */

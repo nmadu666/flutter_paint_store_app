@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../models/order.dart';
+import '../../application/order_provider.dart'; // Import OrderWithCustomer
 import 'order_details_dialog.dart';
 
 class OrderListItem extends StatelessWidget {
-  final Order order;
+  final OrderWithCustomer orderWithCustomer;
 
-  const OrderListItem({super.key, required this.order});
+  const OrderListItem({super.key, required this.orderWithCustomer});
 
   // Helper to format currency
   String _formatCurrency(double amount) {
@@ -31,6 +32,7 @@ class OrderListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final order = orderWithCustomer.order; // Get the order
     final statusColor = _getStatusColor(order.status);
     final statusText = order.statusValue ?? 'Không xác định';
     final textTheme = Theme.of(context).textTheme;
@@ -41,12 +43,12 @@ class OrderListItem extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => _showOrderDetailsDialog(context),
+        onTap: () => _showOrderDetailsDialog(context, order),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildTitle(context, statusText, statusColor, textTheme),
-            _buildActionButtons(context),
+            _buildActionButtons(context, order),
           ],
         ),
       ),
@@ -55,13 +57,17 @@ class OrderListItem extends StatelessWidget {
 
   Widget _buildTitle(
       BuildContext context, String statusText, Color statusColor, TextTheme textTheme) {
+    final order = orderWithCustomer.order;
+    final customer = orderWithCustomer.customer;
+    final customerName = customer?.name ?? order.customerName ?? 'Khách lẻ';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            order.customerName ?? 'Khách lẻ',
+            customerName,
             style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
@@ -96,7 +102,7 @@ class OrderListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, Order order) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.03),
@@ -109,7 +115,7 @@ class OrderListItem extends StatelessWidget {
             context,
             icon: Icons.info_outline,
             label: 'Chi tiết',
-            onPressed: () => _showOrderDetailsDialog(context),
+            onPressed: () => _showOrderDetailsDialog(context, order),
           ),
           _actionButton(
             context,
@@ -148,7 +154,7 @@ class OrderListItem extends StatelessWidget {
     );
   }
 
-  void _showOrderDetailsDialog(BuildContext context) {
+  void _showOrderDetailsDialog(BuildContext context, Order order) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

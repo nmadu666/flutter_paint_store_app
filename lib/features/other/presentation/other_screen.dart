@@ -1,11 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_paint_store_app/features/admin/presentation/sync_screen.dart';
 import 'package:flutter_paint_store_app/features/other/presentation/kiotviet_config_screen.dart';
 import 'package:flutter_paint_store_app/features/kiot_viet/presentation/kiot_viet_test_screen.dart';
-
-// Provider to control the drawer state. Let's default to true for desktop.
-final otherScreenDrawerProvider = StateProvider<bool>((ref) => true);
 
 class OtherScreen extends ConsumerWidget {
   final String userRole;
@@ -13,55 +11,84 @@ class OtherScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDrawerOpen = ref.watch(otherScreenDrawerProvider);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Khác / Quản trị'),
+      ),
+      body: ListView(
+        children: [
+          if (userRole == 'admin') ...[
+            _buildAdminSection(context),
+            const Divider(),
+          ],
+          _buildDeveloperSection(context),
+          const Divider(),
+          _buildLogoutTile(context),
+        ],
+      ),
+    );
+  }
 
-    // The original content of the screen
-    final mainContent = ListView(
+  Widget _buildAdminSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (userRole == 'admin')
-          ListTile(
-            leading: const Icon(Icons.settings_applications),
-            title: const Text('Cấu hình KiotViet'),
-            subtitle: const Text('Quản lý thông tin kết nối KiotViet API'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const KiotVietConfigScreen(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            'Quản trị',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
-              );
-            },
           ),
-        const Divider(),
+        ),
         ListTile(
-          leading: Icon(
-            Icons.logout,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          title: Text(
-            'Đăng xuất',
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
-          onTap: () async {
-            await FirebaseAuth.instance.signOut();
+          leading: const Icon(Icons.settings_applications),
+          title: const Text('Cấu hình KiotViet'),
+          subtitle: const Text('Quản lý thông tin kết nối KiotViet API'),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const KiotVietConfigScreen(),
+              ),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.sync),
+          title: const Text('Đồng bộ KiotViet'),
+          subtitle: const Text('Đồng bộ dữ liệu từ KiotViet về Firebase'),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SyncScreen(),
+              ),
+            );
           },
         ),
       ],
     );
+  }
 
-    // The new drawer that will be shown on the side
-    final sideDrawer = NavigationDrawer(
+  Widget _buildDeveloperSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(28, 16, 16, 10),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            'Developer Menu',
-            style: Theme.of(context).textTheme.titleSmall,
+            'Công cụ phát triển',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
           ),
         ),
         ListTile(
           leading: const Icon(Icons.science_outlined),
           title: const Text('Test KiotViet API'),
+          subtitle: const Text('Gửi yêu cầu đến KiotViet API proxy'),
           onTap: () {
             Navigator.push(
               context,
@@ -73,33 +100,21 @@ class OtherScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Khác / Quản trị'),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            ref.read(otherScreenDrawerProvider.notifier).update((state) => !state);
-          },
-        ),
+  Widget _buildLogoutTile(BuildContext context) {
+    return ListTile(
+      leading: Icon(
+        Icons.logout,
+        color: Theme.of(context).colorScheme.error,
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // This is the new side drawer, toggled by the provider
-          if (isDrawerOpen)
-            SizedBox(
-                width: 250, // Typical drawer width
-                child: sideDrawer),
-          // A divider between the drawer and the content
-          if (isDrawerOpen) const VerticalDivider(thickness: 1, width: 1),
-          // The original content, now expanded to fill the rest of the space
-          Expanded(
-            child: mainContent,
-          ),
-        ],
+      title: Text(
+        'Đăng xuất',
+        style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
+      onTap: () async {
+        await FirebaseAuth.instance.signOut();
+      },
     );
   }
 }

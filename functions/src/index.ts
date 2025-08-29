@@ -62,28 +62,43 @@ async function getKiotVietConfig() {
 
 
 /**
- * A callable function that acts as a proxy to the KiotViet API.
+ * A generic callable function that acts as a proxy to the KiotViet API.
  * It fetches a global configuration from Firestore, handles authentication,
- * and forwards GET requests from the client app.
+ * and forwards requests (GET, POST, PUT, DELETE) from the client app.
  */
-export const kiotVietGetProxy = onCall(async (request) => {
-  logger.info("kiotVietGetProxy function triggered", {
+export const kiotVietProxy = onCall(async (request) => {
+  logger.info("kiotVietProxy function triggered", {
     data: request.data,
   });
 
   try {
-    // Validate that data was sent and contains the required 'endpoint'
-    if (!request.data || !request.data.endpoint) {
+    // Validate that data was sent and contains the required fields
+    if (
+      !request.data ||
+      !request.data.endpoint ||
+      !request.data.method
+    ) {
       logger.error(
-        "Request rejected: Missing 'endpoint' in request data.",
+        "Request rejected: Missing 'endpoint' or 'method' in request data.",
         {data: request.data}
       );
       throw new HttpsError(
         "invalid-argument",
-        "The function must be called with an 'endpoint' in the data payload."
+        "The function must be called with 'method' and 'endpoint'" +
+        "in the data payload."
       );
     }
-    const {endpoint, params} = request.data;
+    const {
+      method,
+      endpoint,
+      params,
+      body,
+    } = request.data as {
+      method: "GET" | "POST" | "PUT" | "DELETE",
+      endpoint: string,
+      params?: unknown,
+      body?: unknown,
+    };
 
     // Get the global KiotViet configuration from Firestore
     const {retailer, clientId, clientSecret} = await getKiotVietConfig();
@@ -110,24 +125,27 @@ export const kiotVietGetProxy = onCall(async (request) => {
     }
 
     const apiUrl = `https://public.kiotapi.com/${endpoint}`;
-    logger.info(`Making GET request to KiotViet API: ${apiUrl}`, {params});
+    logger.info(`Making ${method} request to KiotViet API: ${apiUrl}`, {
+      params,
+      body,
+    });
 
     // Make the API call to KiotViet
-    const response = await axios.get(apiUrl, {
+    const response = await axios({
+      method: method,
+      url: apiUrl,
       headers: {
         "Authorization": `Bearer ${kiotVietToken.accessToken}`,
         "Retailer": retailer, // Use the retailer from the Firestore config
       },
       params: params || {},
+      data: body || {}, // Body for POST, PUT requests
     });
 
     logger.info("Successfully received data from KiotViet API.");
     return response.data;
   } catch (error) {
-    // In case of an error, reset the token to force re-authentication next
-    // time.
-    kiotVietToken = null;
-    logger.error("Error in kiotVietGetProxy:", error);
+    logger.error("Error in kiotVietProxy:", error);
 
     // If the error is already an HttpsError, re-throw it.
     // This is important for errors from getKiotVietConfig or
@@ -139,6 +157,12 @@ export const kiotVietGetProxy = onCall(async (request) => {
     // Handle Axios errors specifically to provide more context
     if (isAxiosError(error)) {
       if (error.response) {
+        // If the error is 401 Unauthorized, it's likely the token expired.
+        // Clear the cache to force a new token on the next request.
+        if (error.response.status === 401) {
+          logger.warn("Received 401 from KiotViet. Clearing token cache.");
+          kiotVietToken = null;
+        }
         // The request was made and the server responded with a status code
         throw new HttpsError(
           "internal",
