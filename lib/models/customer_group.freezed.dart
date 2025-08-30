@@ -21,7 +21,8 @@ CustomerGroup _$CustomerGroupFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$CustomerGroup {
-  int get id => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id => throw _privateConstructorUsedError;
   String? get groupName => throw _privateConstructorUsedError;
   int? get retailerId => throw _privateConstructorUsedError;
   DateTime? get modifiedDate => throw _privateConstructorUsedError;
@@ -44,7 +45,7 @@ abstract class $CustomerGroupCopyWith<$Res> {
   ) = _$CustomerGroupCopyWithImpl<$Res, CustomerGroup>;
   @useResult
   $Res call({
-    int id,
+    @JsonKey(fromJson: _stringFromValue) String id,
     String? groupName,
     int? retailerId,
     DateTime? modifiedDate,
@@ -76,7 +77,7 @@ class _$CustomerGroupCopyWithImpl<$Res, $Val extends CustomerGroup>
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             groupName: freezed == groupName
                 ? _value.groupName
                 : groupName // ignore: cast_nullable_to_non_nullable
@@ -105,7 +106,7 @@ abstract class _$$CustomerGroupImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int id,
+    @JsonKey(fromJson: _stringFromValue) String id,
     String? groupName,
     int? retailerId,
     DateTime? modifiedDate,
@@ -136,7 +137,7 @@ class __$$CustomerGroupImplCopyWithImpl<$Res>
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         groupName: freezed == groupName
             ? _value.groupName
             : groupName // ignore: cast_nullable_to_non_nullable
@@ -158,7 +159,7 @@ class __$$CustomerGroupImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$CustomerGroupImpl implements _CustomerGroup {
   const _$CustomerGroupImpl({
-    required this.id,
+    @JsonKey(fromJson: _stringFromValue) required this.id,
     this.groupName,
     this.retailerId,
     this.modifiedDate,
@@ -168,7 +169,8 @@ class _$CustomerGroupImpl implements _CustomerGroup {
       _$$CustomerGroupImplFromJson(json);
 
   @override
-  final int id;
+  @JsonKey(fromJson: _stringFromValue)
+  final String id;
   @override
   final String? groupName;
   @override
@@ -216,7 +218,7 @@ class _$CustomerGroupImpl implements _CustomerGroup {
 
 abstract class _CustomerGroup implements CustomerGroup {
   const factory _CustomerGroup({
-    required final int id,
+    @JsonKey(fromJson: _stringFromValue) required final String id,
     final String? groupName,
     final int? retailerId,
     final DateTime? modifiedDate,
@@ -226,7 +228,8 @@ abstract class _CustomerGroup implements CustomerGroup {
       _$CustomerGroupImpl.fromJson;
 
   @override
-  int get id;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id;
   @override
   String? get groupName;
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_paint_store_app/common/app_breakpoints.dart';
 import 'package:flutter_paint_store_app/features/sales/application/quote_tabs_provider.dart';
 import 'package:flutter_paint_store_app/features/sales/application/ui_state_providers.dart';
 import 'package:flutter_paint_store_app/features/sales/presentation/widgets/cart/reorderable_desktop_cart_table.dart';
@@ -30,11 +31,11 @@ class SalesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 900;
-        if (isMobile) {
-          return _buildMobileLayout(context, ref);
-        } else {
+        final isDesktop = constraints.maxWidth > AppBreakpoints.desktop;
+        if (isDesktop) {
           return _buildDesktopLayout(context, ref);
+        } else {
+          return _buildMobileLayout(context, ref);
         }
       },
     );
@@ -42,8 +43,13 @@ class SalesScreen extends ConsumerWidget {
 
   Widget _buildMobileLayout(BuildContext context, WidgetRef ref) {
     final isShowingCart = ref.watch(isShowingCartMobileProvider);
+    final appBarHeight = kToolbarHeight + (isShowingCart ? 0 : kToolbarHeight);
+
     return Scaffold(
-      appBar: const SalesAppBar(isMobile: true),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(appBarHeight),
+        child: const SalesAppBar(isMobile: true),
+      ),
       body: isShowingCart
           ? MobileCartView(onPrint: () => _handlePrintQuote(context, ref))
           : const ProductList(),
@@ -69,7 +75,10 @@ class SalesScreen extends ConsumerWidget {
             });
 
             return Scaffold(
-              appBar: const SalesAppBar(isMobile: false),
+              appBar: PreferredSize(
+                preferredSize: const Size.fromHeight(kToolbarHeight),
+                child: const SalesAppBar(isMobile: false),
+              ),
               body: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

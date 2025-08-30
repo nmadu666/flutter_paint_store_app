@@ -8,7 +8,7 @@ part of 'customer_group.dart';
 
 _$CustomerGroupImpl _$$CustomerGroupImplFromJson(Map<String, dynamic> json) =>
     _$CustomerGroupImpl(
-      id: (json['id'] as num).toInt(),
+      id: _stringFromValue(json['id']),
       groupName: json['groupName'] as String?,
       retailerId: (json['retailerId'] as num?)?.toInt(),
       modifiedDate: json['modifiedDate'] == null

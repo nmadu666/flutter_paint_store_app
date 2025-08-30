@@ -8,11 +8,11 @@ part of 'voucher.dart';
 
 _$VoucherImpl _$$VoucherImplFromJson(Map<String, dynamic> json) =>
     _$VoucherImpl(
-      id: (json['id'] as num).toInt(),
+      id: _stringFromValue(json['id']),
       code: json['code'] as String?,
       type: (json['type'] as num?)?.toInt(),
       price: (json['price'] as num?)?.toDouble(),
-      branchId: (json['branchId'] as num?)?.toInt(),
+      branchId: _nullableStringFromValue(json['branchId']),
       createdDate: json['createdDate'] == null
           ? null
           : DateTime.parse(json['createdDate'] as String),
@@ -20,7 +20,7 @@ _$VoucherImpl _$$VoucherImplFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['modifiedDate'] as String),
       description: json['description'] as String?,
-      customerId: (json['customerId'] as num?)?.toInt(),
+      customerId: _nullableStringFromValue(json['customerId']),
       customerCode: json['customerCode'] as String?,
       customerName: json['customerName'] as String?,
     );

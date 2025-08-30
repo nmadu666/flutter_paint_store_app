@@ -103,8 +103,9 @@ final suitableParentProductsProvider = FutureProvider.autoDispose
       final allColorPrices = ref.watch(allColorPricesProvider);
 
       // Filter products by the brand of the selected color
-      final brandFilteredProducts =
-          allParentProducts.where((p) => p.brand == color.brand);
+      final brandFilteredProducts = allParentProducts.where(
+        (p) => p.brand == color.brand,
+      );
 
       final suitableParents = brandFilteredProducts.where((parent) {
         // A parent product is suitable if it has ANY child product that can be tinted
@@ -148,5 +149,5 @@ class ColorProductPair {
 final finalPriceProvider = Provider.autoDispose
     .family<double?, ColorProductPair>((ref, pair) {
       final priceService = ref.watch(priceServiceProvider);
-      return priceService.getFinalPrice(pair.color, pair.product);
+      return priceService.getFinalPrice(pair.color, pair.product, [], []);
     });

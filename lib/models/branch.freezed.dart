@@ -21,7 +21,8 @@ Branch _$BranchFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Branch {
-  int get id => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id => throw _privateConstructorUsedError;
   String? get branchName => throw _privateConstructorUsedError;
   String? get contactNumber => throw _privateConstructorUsedError;
   String? get address => throw _privateConstructorUsedError;
@@ -43,7 +44,7 @@ abstract class $BranchCopyWith<$Res> {
       _$BranchCopyWithImpl<$Res, Branch>;
   @useResult
   $Res call({
-    int id,
+    @JsonKey(fromJson: _stringFromValue) String id,
     String? branchName,
     String? contactNumber,
     String? address,
@@ -79,7 +80,7 @@ class _$BranchCopyWithImpl<$Res, $Val extends Branch>
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             branchName: freezed == branchName
                 ? _value.branchName
                 : branchName // ignore: cast_nullable_to_non_nullable
@@ -115,7 +116,7 @@ abstract class _$$BranchImplCopyWith<$Res> implements $BranchCopyWith<$Res> {
   @override
   @useResult
   $Res call({
-    int id,
+    @JsonKey(fromJson: _stringFromValue) String id,
     String? branchName,
     String? contactNumber,
     String? address,
@@ -150,7 +151,7 @@ class __$$BranchImplCopyWithImpl<$Res>
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         branchName: freezed == branchName
             ? _value.branchName
             : branchName // ignore: cast_nullable_to_non_nullable
@@ -180,7 +181,7 @@ class __$$BranchImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$BranchImpl implements _Branch {
   const _$BranchImpl({
-    required this.id,
+    @JsonKey(fromJson: _stringFromValue) required this.id,
     this.branchName,
     this.contactNumber,
     this.address,
@@ -192,7 +193,8 @@ class _$BranchImpl implements _Branch {
       _$$BranchImplFromJson(json);
 
   @override
-  final int id;
+  @JsonKey(fromJson: _stringFromValue)
+  final String id;
   @override
   final String? branchName;
   @override
@@ -254,7 +256,7 @@ class _$BranchImpl implements _Branch {
 
 abstract class _Branch implements Branch {
   const factory _Branch({
-    required final int id,
+    @JsonKey(fromJson: _stringFromValue) required final String id,
     final String? branchName,
     final String? contactNumber,
     final String? address,
@@ -265,7 +267,8 @@ abstract class _Branch implements Branch {
   factory _Branch.fromJson(Map<String, dynamic> json) = _$BranchImpl.fromJson;
 
   @override
-  int get id;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id;
   @override
   String? get branchName;
   @override

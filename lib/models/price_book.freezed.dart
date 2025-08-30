@@ -21,7 +21,8 @@ PriceBook _$PriceBookFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$PriceBook {
-  int get id => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id => throw _privateConstructorUsedError;
   String? get code => throw _privateConstructorUsedError;
   String? get name => throw _privateConstructorUsedError;
   int? get retailerId => throw _privateConstructorUsedError;
@@ -43,7 +44,7 @@ abstract class $PriceBookCopyWith<$Res> {
       _$PriceBookCopyWithImpl<$Res, PriceBook>;
   @useResult
   $Res call({
-    int id,
+    @JsonKey(fromJson: _stringFromValue) String id,
     String? code,
     String? name,
     int? retailerId,
@@ -77,7 +78,7 @@ class _$PriceBookCopyWithImpl<$Res, $Val extends PriceBook>
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             code: freezed == code
                 ? _value.code
                 : code // ignore: cast_nullable_to_non_nullable
@@ -110,7 +111,7 @@ abstract class _$$PriceBookImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int id,
+    @JsonKey(fromJson: _stringFromValue) String id,
     String? code,
     String? name,
     int? retailerId,
@@ -143,7 +144,7 @@ class __$$PriceBookImplCopyWithImpl<$Res>
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         code: freezed == code
             ? _value.code
             : code // ignore: cast_nullable_to_non_nullable
@@ -169,7 +170,7 @@ class __$$PriceBookImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PriceBookImpl implements _PriceBook {
   const _$PriceBookImpl({
-    required this.id,
+    @JsonKey(fromJson: _stringFromValue) required this.id,
     this.code,
     this.name,
     this.retailerId,
@@ -180,7 +181,8 @@ class _$PriceBookImpl implements _PriceBook {
       _$$PriceBookImplFromJson(json);
 
   @override
-  final int id;
+  @JsonKey(fromJson: _stringFromValue)
+  final String id;
   @override
   final String? code;
   @override
@@ -230,7 +232,7 @@ class _$PriceBookImpl implements _PriceBook {
 
 abstract class _PriceBook implements PriceBook {
   const factory _PriceBook({
-    required final int id,
+    @JsonKey(fromJson: _stringFromValue) required final String id,
     final String? code,
     final String? name,
     final int? retailerId,
@@ -241,7 +243,8 @@ abstract class _PriceBook implements PriceBook {
       _$PriceBookImpl.fromJson;
 
   @override
-  int get id;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id;
   @override
   String? get code;
   @override

@@ -37,8 +37,9 @@ class KiotVietOrderRepository implements OrderRepository {
     final productIds = <String>{};
 
     for (final order in allOrders) {
-      if (order.customerId != null)
+      if (order.customerId != null) {
         customerIds.add(order.customerId.toString());
+      }
       if (order.branchId != null) branchIds.add(order.branchId.toString());
       for (final detail in order.orderDetails) {
         productIds.add(detail.productId.toString());
@@ -72,16 +73,19 @@ class KiotVietOrderRepository implements OrderRepository {
         return isProductValid;
       });
 
-      if (!isCustomerValid)
+      if (!isCustomerValid) {
         debugPrint(
           'Order ${order.code} skipped: Missing customer ${order.customerId}',
         );
-      if (!isBranchValid)
+      }
+      if (!isBranchValid) {
         debugPrint(
           'Order ${order.code} skipped: Missing branch ${order.branchId}',
         );
-      if (!areDetailsValid)
+      }
+      if (!areDetailsValid) {
         debugPrint('Order ${order.code} skipped: Contains missing products');
+      }
 
       return isCustomerValid && isBranchValid && areDetailsValid;
     }).toList();
@@ -139,7 +143,7 @@ class KiotVietOrderRepository implements OrderRepository {
     final missingIds = allIds.difference(existingIds);
     if (missingIds.isNotEmpty) {
       debugPrint(
-        'WARNING: The following ${type} IDs from KiotViet orders are NOT found in Firebase: $missingIds. Please run data sync.',
+        'WARNING: The following $type IDs from KiotViet orders are NOT found in Firebase: $missingIds. Please run data sync.',
       );
     }
   }

@@ -8,7 +8,7 @@ part of 'sale_channel.dart';
 
 _$SaleChannelImpl _$$SaleChannelImplFromJson(Map<String, dynamic> json) =>
     _$SaleChannelImpl(
-      id: (json['id'] as num).toInt(),
+      id: _stringFromValue(json['id']),
       name: json['name'] as String?,
       retailerId: (json['retailerId'] as num?)?.toInt(),
       modifiedDate: json['modifiedDate'] == null

@@ -21,7 +21,8 @@ SaleChannel _$SaleChannelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$SaleChannel {
-  int get id => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id => throw _privateConstructorUsedError;
   String? get name => throw _privateConstructorUsedError;
   int? get retailerId => throw _privateConstructorUsedError;
   DateTime? get modifiedDate => throw _privateConstructorUsedError;
@@ -43,7 +44,12 @@ abstract class $SaleChannelCopyWith<$Res> {
     $Res Function(SaleChannel) then,
   ) = _$SaleChannelCopyWithImpl<$Res, SaleChannel>;
   @useResult
-  $Res call({int id, String? name, int? retailerId, DateTime? modifiedDate});
+  $Res call({
+    @JsonKey(fromJson: _stringFromValue) String id,
+    String? name,
+    int? retailerId,
+    DateTime? modifiedDate,
+  });
 }
 
 /// @nodoc
@@ -71,7 +77,7 @@ class _$SaleChannelCopyWithImpl<$Res, $Val extends SaleChannel>
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             name: freezed == name
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
@@ -99,7 +105,12 @@ abstract class _$$SaleChannelImplCopyWith<$Res>
   ) = __$$SaleChannelImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int id, String? name, int? retailerId, DateTime? modifiedDate});
+  $Res call({
+    @JsonKey(fromJson: _stringFromValue) String id,
+    String? name,
+    int? retailerId,
+    DateTime? modifiedDate,
+  });
 }
 
 /// @nodoc
@@ -126,7 +137,7 @@ class __$$SaleChannelImplCopyWithImpl<$Res>
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         name: freezed == name
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
@@ -148,7 +159,7 @@ class __$$SaleChannelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$SaleChannelImpl implements _SaleChannel {
   const _$SaleChannelImpl({
-    required this.id,
+    @JsonKey(fromJson: _stringFromValue) required this.id,
     this.name,
     this.retailerId,
     this.modifiedDate,
@@ -158,7 +169,8 @@ class _$SaleChannelImpl implements _SaleChannel {
       _$$SaleChannelImplFromJson(json);
 
   @override
-  final int id;
+  @JsonKey(fromJson: _stringFromValue)
+  final String id;
   @override
   final String? name;
   @override
@@ -205,7 +217,7 @@ class _$SaleChannelImpl implements _SaleChannel {
 
 abstract class _SaleChannel implements SaleChannel {
   const factory _SaleChannel({
-    required final int id,
+    @JsonKey(fromJson: _stringFromValue) required final String id,
     final String? name,
     final int? retailerId,
     final DateTime? modifiedDate,
@@ -215,7 +227,8 @@ abstract class _SaleChannel implements SaleChannel {
       _$SaleChannelImpl.fromJson;
 
   @override
-  int get id;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id;
   @override
   String? get name;
   @override

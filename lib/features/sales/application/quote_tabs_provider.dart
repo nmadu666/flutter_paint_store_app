@@ -6,11 +6,11 @@ import 'package:flutter_paint_store_app/models/cost_item.dart';
 import 'package:flutter_paint_store_app/models/customer.dart';
 import 'package:flutter_paint_store_app/models/paint_color.dart';
 import 'package:flutter_paint_store_app/models/quote.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_paint_store_app/features/sales/infrastructure/quote_local_repository.dart';
 import 'package:flutter_paint_store_app/features/sales/application/customer_providers.dart';
-import 'package:flutter_paint_store_app/features/sales/application/ui_state_providers.dart';
+
+import 'price_book_providers.dart';
 
 // State Definition
 class SalesTabsState {
@@ -40,18 +40,43 @@ class SalesTabsState {
 
 // AsyncNotifier Definition
 class QuoteTabsNotifier extends AsyncNotifier<SalesTabsState> {
-  late QuoteLocalRepository _repository;
+  // Helper để lấy repository một cách an toàn.
+  Future<QuoteLocalRepository> _getRepository() async {
+    return ref.watch(quoteLocalRepositoryProvider.future);
+  }
 
   @override
   Future<SalesTabsState> build() async {
-    final prefs = await ref.watch(sharedPreferencesProvider.future);
-    _repository = QuoteLocalRepository(prefs);
+    // 1. Sử dụng provider đã có để lấy repository.
+    final repository = await _getRepository();
+    final loadedQuotes = await repository.loadQuotes();
 
-    final loadedQuotes = await _repository.loadQuotes();
     if (loadedQuotes.isEmpty) {
-      final initialCustomer = ref.read(customersProvider).firstWhere((c) => c.id == 1, orElse: () => ref.read(customersProvider).first);
+      // 2. Lấy dữ liệu từ các provider bất đồng bộ một cách an toàn.
+      final customers = ref.watch(customersProvider);
+      final priceBooks = await ref.watch(priceBooksProvider.future);
+
+      // 3. Tìm khách lẻ và bảng giá mặc định một cách an toàn.
+      final retailCustomer = customers.firstWhereOrNull(
+        (c) => c.id == retailCustomerId.toString(),
+      );
+
+      if (retailCustomer == null) {
+        throw Exception(
+            "Không tìm thấy khách lẻ. Vui lòng đồng bộ dữ liệu khách hàng.");
+      }
+      if (priceBooks.isEmpty) {
+        throw Exception(
+            "Không có bảng giá nào. Vui lòng đồng bộ dữ liệu bảng giá.");
+      }
+
+      final initialQuote = Quote.initial(0).copyWith(
+        customer: retailCustomer,
+        priceList: priceBooks.first.name, // Lấy tên của bảng giá đầu tiên
+      );
+
       return SalesTabsState(
-        quotes: [Quote.initial(0).copyWith(customer: initialCustomer, priceList: ref.read(priceListsProvider).first)],
+        quotes: [initialQuote],
         activeTabIndex: 0,
       );
     } else {
@@ -62,21 +87,37 @@ class QuoteTabsNotifier extends AsyncNotifier<SalesTabsState> {
     }
   }
 
-  Future<void> _updateState(SalesTabsState newState) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await _repository.saveQuotes(newState.quotes);
-      return newState;
-    });
+  // 4. Áp dụng "Optimistic Update" để cải thiện UX.
+  Future<void> _optimisticUpdateAndSave(SalesTabsState newState) async {
+    // Cập nhật UI ngay lập tức, không cần chờ đợi.
+    state = AsyncValue.data(newState);
+    // Lưu vào bộ nhớ trong nền.
+    try {
+      final repository = await _getRepository();
+      await repository.saveQuotes(newState.quotes);
+    } catch (e, s) {
+      // Nếu có lỗi, có thể xử lý bằng cách đưa state về trạng thái lỗi.
+      state = AsyncValue.error('Lưu báo giá thất bại: $e', s);
+    }
   }
 
   Future<void> addTab() async {
     if (state.value == null || state.value!.quotes.length >= 20) return;
     final currentState = state.value!;
-    final initialCustomer = ref.read(customersProvider).firstWhere((c) => c.id == 1, orElse: () => ref.read(customersProvider).first);
-    final newQuote = Quote.initial(currentState.quotes.length).copyWith(customer: initialCustomer, priceList: ref.read(priceListsProvider).first);
+    // Lấy dữ liệu an toàn khi thêm tab mới.
+    final customers = ref.read(customersProvider);
+    final priceBooks = await ref.read(priceBooksProvider.future);
+    final retailCustomer =
+        customers.firstWhereOrNull((c) => c.id == retailCustomerId.toString());
+
+    if (retailCustomer == null || priceBooks.isEmpty) return;
+
+    final newQuote = Quote.initial(currentState.quotes.length).copyWith(
+      customer: retailCustomer,
+      priceList: priceBooks.first.name,
+    );
     final updatedQuotes = [...currentState.quotes, newQuote];
-    await _updateState(currentState.copyWith(
+    await _optimisticUpdateAndSave(currentState.copyWith(
       quotes: updatedQuotes,
       activeTabIndex: updatedQuotes.length - 1,
     ));
@@ -92,7 +133,7 @@ class QuoteTabsNotifier extends AsyncNotifier<SalesTabsState> {
     } else if (index < currentState.activeTabIndex) {
       newActiveIndex = currentState.activeTabIndex - 1;
     }
-    await _updateState(currentState.copyWith(
+    await _optimisticUpdateAndSave(currentState.copyWith(
       quotes: updatedQuotes,
       activeTabIndex: newActiveIndex,
     ));
@@ -113,7 +154,7 @@ class QuoteTabsNotifier extends AsyncNotifier<SalesTabsState> {
     final updatedQuote = mutation(activeQuote);
     final updatedQuotes = [...currentState.quotes];
     updatedQuotes[currentState.activeTabIndex] = updatedQuote;
-    await _updateState(currentState.copyWith(quotes: updatedQuotes));
+    await _optimisticUpdateAndSave(currentState.copyWith(quotes: updatedQuotes));
   }
 
   Future<void> addOrUpdateProduct(Product product) async {
@@ -209,11 +250,6 @@ class QuoteTabsNotifier extends AsyncNotifier<SalesTabsState> {
     });
   }
 }
-
-// Provider Definitions
-final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) {
-  return SharedPreferences.getInstance();
-});
 
 final quoteTabsProvider = AsyncNotifierProvider<QuoteTabsNotifier, SalesTabsState>(() {
   return QuoteTabsNotifier();

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_paint_store_app/features/admin/application/firebase_service.dart';
@@ -61,20 +60,24 @@ class SyncNotifier extends StateNotifier<List<SyncItem>> {
       return [];
     }
 
-    String idField;
-    switch (endpoint) {
-      case 'categories':
-        idField = 'categoryId';
-        break;
-      default:
-        idField = 'id';
-    }
-
     return data.map((item) {
-      final newItem = {...item};
-      if (newItem.containsKey(idField)) {
-        newItem['id'] = newItem[idField];
+      final newItem = Map<String, dynamic>.from(item);
+
+      // Iterate over all keys and convert any field ending in 'Id' or 'id' to a string.
+      final keys = newItem.keys.toList(); // Avoid concurrent modification issues
+      for (var key in keys) {
+        if (key.toLowerCase().endsWith('id') && newItem[key] != null) {
+          newItem[key] = newItem[key].toString();
+        }
       }
+
+      // Special case for 'categories': rename 'categoryId' to 'id'.
+      // The value is already a string from the loop above.
+      if (endpoint == 'categories' && newItem.containsKey('categoryId')) {
+        newItem['id'] = newItem['categoryId'];
+        newItem.remove('categoryId');
+      }
+      
       return newItem;
     }).toList();
   }
@@ -137,7 +140,8 @@ class SyncNotifier extends StateNotifier<List<SyncItem>> {
 
 final syncNotifierProvider = StateNotifierProvider<SyncNotifier, List<SyncItem>>((ref) {
   final kiotVietService = ref.watch(kiotVietServiceProvider);
-  final firebaseService = FirebaseService();
+  // Sử dụng provider để lấy instance, tuân thủ nguyên tắc Dependency Injection.
+  final firebaseService = ref.watch(firebaseServiceProvider);
   return SyncNotifier(kiotVietService, firebaseService);
 });
 

@@ -21,15 +21,18 @@ Voucher _$VoucherFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$Voucher {
-  int get id => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id => throw _privateConstructorUsedError;
   String? get code => throw _privateConstructorUsedError;
   int? get type => throw _privateConstructorUsedError;
   double? get price => throw _privateConstructorUsedError;
-  int? get branchId => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _nullableStringFromValue)
+  String? get branchId => throw _privateConstructorUsedError;
   DateTime? get createdDate => throw _privateConstructorUsedError;
   DateTime? get modifiedDate => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
-  int? get customerId => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _nullableStringFromValue)
+  String? get customerId => throw _privateConstructorUsedError;
   String? get customerCode => throw _privateConstructorUsedError;
   String? get customerName => throw _privateConstructorUsedError;
 
@@ -48,15 +51,15 @@ abstract class $VoucherCopyWith<$Res> {
       _$VoucherCopyWithImpl<$Res, Voucher>;
   @useResult
   $Res call({
-    int id,
+    @JsonKey(fromJson: _stringFromValue) String id,
     String? code,
     int? type,
     double? price,
-    int? branchId,
+    @JsonKey(fromJson: _nullableStringFromValue) String? branchId,
     DateTime? createdDate,
     DateTime? modifiedDate,
     String? description,
-    int? customerId,
+    @JsonKey(fromJson: _nullableStringFromValue) String? customerId,
     String? customerCode,
     String? customerName,
   });
@@ -94,7 +97,7 @@ class _$VoucherCopyWithImpl<$Res, $Val extends Voucher>
             id: null == id
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             code: freezed == code
                 ? _value.code
                 : code // ignore: cast_nullable_to_non_nullable
@@ -110,7 +113,7 @@ class _$VoucherCopyWithImpl<$Res, $Val extends Voucher>
             branchId: freezed == branchId
                 ? _value.branchId
                 : branchId // ignore: cast_nullable_to_non_nullable
-                      as int?,
+                      as String?,
             createdDate: freezed == createdDate
                 ? _value.createdDate
                 : createdDate // ignore: cast_nullable_to_non_nullable
@@ -126,7 +129,7 @@ class _$VoucherCopyWithImpl<$Res, $Val extends Voucher>
             customerId: freezed == customerId
                 ? _value.customerId
                 : customerId // ignore: cast_nullable_to_non_nullable
-                      as int?,
+                      as String?,
             customerCode: freezed == customerCode
                 ? _value.customerCode
                 : customerCode // ignore: cast_nullable_to_non_nullable
@@ -150,15 +153,15 @@ abstract class _$$VoucherImplCopyWith<$Res> implements $VoucherCopyWith<$Res> {
   @override
   @useResult
   $Res call({
-    int id,
+    @JsonKey(fromJson: _stringFromValue) String id,
     String? code,
     int? type,
     double? price,
-    int? branchId,
+    @JsonKey(fromJson: _nullableStringFromValue) String? branchId,
     DateTime? createdDate,
     DateTime? modifiedDate,
     String? description,
-    int? customerId,
+    @JsonKey(fromJson: _nullableStringFromValue) String? customerId,
     String? customerCode,
     String? customerName,
   });
@@ -195,7 +198,7 @@ class __$$VoucherImplCopyWithImpl<$Res>
         id: null == id
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         code: freezed == code
             ? _value.code
             : code // ignore: cast_nullable_to_non_nullable
@@ -211,7 +214,7 @@ class __$$VoucherImplCopyWithImpl<$Res>
         branchId: freezed == branchId
             ? _value.branchId
             : branchId // ignore: cast_nullable_to_non_nullable
-                  as int?,
+                  as String?,
         createdDate: freezed == createdDate
             ? _value.createdDate
             : createdDate // ignore: cast_nullable_to_non_nullable
@@ -227,7 +230,7 @@ class __$$VoucherImplCopyWithImpl<$Res>
         customerId: freezed == customerId
             ? _value.customerId
             : customerId // ignore: cast_nullable_to_non_nullable
-                  as int?,
+                  as String?,
         customerCode: freezed == customerCode
             ? _value.customerCode
             : customerCode // ignore: cast_nullable_to_non_nullable
@@ -245,15 +248,15 @@ class __$$VoucherImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$VoucherImpl implements _Voucher {
   const _$VoucherImpl({
-    required this.id,
+    @JsonKey(fromJson: _stringFromValue) required this.id,
     this.code,
     this.type,
     this.price,
-    this.branchId,
+    @JsonKey(fromJson: _nullableStringFromValue) this.branchId,
     this.createdDate,
     this.modifiedDate,
     this.description,
-    this.customerId,
+    @JsonKey(fromJson: _nullableStringFromValue) this.customerId,
     this.customerCode,
     this.customerName,
   });
@@ -262,7 +265,8 @@ class _$VoucherImpl implements _Voucher {
       _$$VoucherImplFromJson(json);
 
   @override
-  final int id;
+  @JsonKey(fromJson: _stringFromValue)
+  final String id;
   @override
   final String? code;
   @override
@@ -270,7 +274,8 @@ class _$VoucherImpl implements _Voucher {
   @override
   final double? price;
   @override
-  final int? branchId;
+  @JsonKey(fromJson: _nullableStringFromValue)
+  final String? branchId;
   @override
   final DateTime? createdDate;
   @override
@@ -278,7 +283,8 @@ class _$VoucherImpl implements _Voucher {
   @override
   final String? description;
   @override
-  final int? customerId;
+  @JsonKey(fromJson: _nullableStringFromValue)
+  final String? customerId;
   @override
   final String? customerCode;
   @override
@@ -347,15 +353,15 @@ class _$VoucherImpl implements _Voucher {
 
 abstract class _Voucher implements Voucher {
   const factory _Voucher({
-    required final int id,
+    @JsonKey(fromJson: _stringFromValue) required final String id,
     final String? code,
     final int? type,
     final double? price,
-    final int? branchId,
+    @JsonKey(fromJson: _nullableStringFromValue) final String? branchId,
     final DateTime? createdDate,
     final DateTime? modifiedDate,
     final String? description,
-    final int? customerId,
+    @JsonKey(fromJson: _nullableStringFromValue) final String? customerId,
     final String? customerCode,
     final String? customerName,
   }) = _$VoucherImpl;
@@ -363,7 +369,8 @@ abstract class _Voucher implements Voucher {
   factory _Voucher.fromJson(Map<String, dynamic> json) = _$VoucherImpl.fromJson;
 
   @override
-  int get id;
+  @JsonKey(fromJson: _stringFromValue)
+  String get id;
   @override
   String? get code;
   @override
@@ -371,7 +378,8 @@ abstract class _Voucher implements Voucher {
   @override
   double? get price;
   @override
-  int? get branchId;
+  @JsonKey(fromJson: _nullableStringFromValue)
+  String? get branchId;
   @override
   DateTime? get createdDate;
   @override
@@ -379,7 +387,8 @@ abstract class _Voucher implements Voucher {
   @override
   String? get description;
   @override
-  int? get customerId;
+  @JsonKey(fromJson: _nullableStringFromValue)
+  String? get customerId;
   @override
   String? get customerCode;
   @override

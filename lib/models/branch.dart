@@ -3,10 +3,13 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'branch.freezed.dart';
 part 'branch.g.dart';
 
+// Helper function to handle ID conversion from int/String to String
+String _stringFromValue(Object? value) => value.toString();
+
 @freezed
 class Branch with _$Branch {
   const factory Branch({
-    required int id,
+    @JsonKey(fromJson: _stringFromValue) required String id,
     String? branchName,
     String? contactNumber,
     String? address,

@@ -8,9 +8,9 @@ part of 'category.dart';
 
 _$CategoryImpl _$$CategoryImplFromJson(Map<String, dynamic> json) =>
     _$CategoryImpl(
-      categoryId: (json['categoryId'] as num).toInt(),
+      id: _stringFromValue(json['categoryId']),
       categoryName: json['categoryName'] as String?,
-      parentId: (json['parentId'] as num?)?.toInt(),
+      parentId: _nullableStringFromValue(json['parentId']),
       hasChild: json['hasChild'] as bool?,
       modifiedDate: json['modifiedDate'] == null
           ? null
@@ -20,7 +20,7 @@ _$CategoryImpl _$$CategoryImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$CategoryImplToJson(_$CategoryImpl instance) =>
     <String, dynamic>{
-      'categoryId': instance.categoryId,
+      'categoryId': instance.id,
       'categoryName': instance.categoryName,
       'parentId': instance.parentId,
       'hasChild': instance.hasChild,

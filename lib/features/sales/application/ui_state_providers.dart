@@ -15,8 +15,3 @@ final isPrintingProvider = StateProvider<bool>(
   (ref) => false,
   name: 'isPrintingProvider',
 );
-
-// Provider cho danh sách các bảng giá
-final priceListsProvider = Provider<List<String>>((ref) {
-  return ['Giá bán lẻ', 'Giá đại lý cấp 1', 'Giá dự án'];
-}, name: 'priceListsProvider');

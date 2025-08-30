@@ -7,7 +7,7 @@ part of 'branch.dart';
 // **************************************************************************
 
 _$BranchImpl _$$BranchImplFromJson(Map<String, dynamic> json) => _$BranchImpl(
-  id: (json['id'] as num).toInt(),
+  id: _stringFromValue(json['id']),
   branchName: json['branchName'] as String?,
   contactNumber: json['contactNumber'] as String?,
   address: json['address'] as String?,

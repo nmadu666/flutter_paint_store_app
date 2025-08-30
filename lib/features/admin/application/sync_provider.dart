@@ -83,7 +83,7 @@ final kiotVietDataRepositoryProvider = Provider<KiotVietDataRepository>((ref) {
   return KiotVietDataRepositoryImpl(kiotVietService);
 });
 
-final firebaseServiceProvider = Provider((ref) => FirebaseService());
+final firebaseServiceProvider = Provider((ref) => FirebaseService(FirebaseFirestore.instance));
 
 final syncProvider = StateNotifierProvider<SyncNotifier, SyncState>((ref) {
   return SyncNotifier(ref);

@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_paint_store_app/data/mock_data.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
 import 'package:flutter_paint_store_app/features/sales/application/ui_state_providers.dart';
+import 'package:flutter_paint_store_app/features/admin/application/firebase_service.dart';
 
-// Provider để lấy danh sách sản phẩm bán hàng (dữ liệu giả)
+// Provider để lấy danh sách sản phẩm bán hàng từ Firebase.
 final salesProductsProvider = FutureProvider<List<Product>>((ref) async {
-  await Future.delayed(const Duration(milliseconds: 300));
-  return mockSalesProducts;
+  final firebaseService = ref.watch(firebaseServiceProvider);
+  return firebaseService.getProducts();
 }, name: 'salesProductsProvider');
 
 // Provider để lọc danh sách sản phẩm bán hàng dựa trên chuỗi tìm kiếm

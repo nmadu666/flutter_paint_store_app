@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter_paint_store_app/common/app_breakpoints.dart';
 import 'customer_selector.dart';
 import 'price_list_selector.dart';
 
-class SalesHeader extends ConsumerWidget {
+// Widget này chỉ phục vụ mục đích layout, vì vậy nó có thể là một StatelessWidget.
+// Nó không cần phải là ConsumerWidget vì không sử dụng `ref`.
+class SalesHeader extends StatelessWidget {
   const SalesHeader({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     // Check screen size to determine layout
-    final isDesktop = MediaQuery.of(context).size.width > 900;
+    final isDesktop = MediaQuery.of(context).size.width > AppBreakpoints.desktop;
 
     if (isDesktop) {
-      // For desktop, use a Column as they will be in a narrow column
+      // For desktop, use a Row with specific alignment and padding.
       return const Padding(
         padding: EdgeInsets.only(bottom: 24.0),
         child: Row(

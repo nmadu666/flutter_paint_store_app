@@ -1,30 +1,27 @@
-
-
-import 'package:flutter_paint_store_app/features/color_palette/application/color_palette_state.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter_paint_store_app/models/paint_color.dart';
 import 'package:flutter_paint_store_app/models/paint_color_price.dart';
+import 'package:flutter_paint_store_app/models/parent_product.dart';
 import 'package:flutter_paint_store_app/models/product.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:collection/collection.dart';
 
 class PriceService {
-  PriceService(this.ref);
+  // The service is now pure and doesn't depend on Riverpod's Ref.
+  // This makes it highly testable and reusable.
 
-  final Ref ref;
-
-  double? getFinalPrice(PaintColor color, Product product) {
-    final parent = ref
-        .watch(allParentProductsProvider)
-        .value
-        ?.firstWhereOrNull(
-          (p) => p.children.any((child) => child.id == product.id),
-        );
+  double? getFinalPrice(
+    PaintColor color,
+    Product product,
+    List<ParentProduct> allParentProducts,
+    List<PaintColorPrice> allColorPrices,
+  ) {
+    final parent = allParentProducts.firstWhereOrNull(
+      (p) => p.children.any((child) => child.id == product.id),
+    );
 
     if (parent?.tintingFormulaType == null || product.base == null) {
       return product.basePrice;
     }
-
-    final allColorPrices = ref.watch(allColorPricesProvider);
 
     final colorPrice = allColorPrices.firstWhereOrNull(
       (price) =>
@@ -34,6 +31,8 @@ class PriceService {
     );
 
     if (colorPrice == null) {
+      // Could not find a matching price for this specific color/base/formula combination.
+      // Returning null might be better to indicate that a price is not available.
       return null;
     }
 
@@ -46,7 +45,8 @@ class PriceService {
     final pricePerMl = colorPrice.pricePerMl;
     final unitValue = product.unitValue;
 
-    // Logic tính giá mới dựa trên yêu cầu của bạn
+    // This logic seems specific and could be extracted to a configuration object
+    // if it needs to be more dynamic in the future.
     if (unitValue < 2 && pricePerMl < 10) {
       tintingCost = 10000;
     } else if (unitValue < 7 && pricePerMl < 20) {
@@ -57,7 +57,7 @@ class PriceService {
       tintingCost = pricePerMl * 1200 * unitValue;
     }
 
-    // Áp dụng chiết khấu nếu chi phí ban đầu (tính theo hệ số 1200) lớn hơn 50,000
+    // Apply discount if the initial cost (based on 1200 multiplier) is > 50,000
     if (pricePerMl * 1200 * unitValue > 50000) {
       tintingCost = pricePerMl * 1150 * unitValue;
     }
@@ -66,4 +66,5 @@ class PriceService {
   }
 }
 
-final priceServiceProvider = Provider((ref) => PriceService(ref));
+// The provider now simply creates an instance of the service.
+final priceServiceProvider = Provider((ref) => PriceService());

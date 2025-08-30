@@ -8,7 +8,7 @@ part of 'price_book.dart';
 
 _$PriceBookImpl _$$PriceBookImplFromJson(Map<String, dynamic> json) =>
     _$PriceBookImpl(
-      id: (json['id'] as num).toInt(),
+      id: _stringFromValue(json['id']),
       code: json['code'] as String?,
       name: json['name'] as String?,
       retailerId: (json['retailerId'] as num?)?.toInt(),
